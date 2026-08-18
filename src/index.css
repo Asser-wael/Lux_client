@@ -1,0 +1,330 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+/* =========================
+   Reset
+========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* =========================
+   Luxury Theme
+========================= */
+
+:root {
+  /* Base */
+  --bg: #f8f8f6;
+  --card: #ffffff;
+  --text: #0b0b0b;
+  --muted: #6b6b6b;
+  --border: #e5e5e5;
+
+  /* Burgundy */
+  --primary: #5a0000;
+  --primary-hover: #760000;
+  --accent: #8b1a1a;
+  --accent-light: #f3e5e5;
+
+  /* Effects */
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.07);
+  --glass: rgba(255, 255, 255, 0.78);
+}
+
+.dark {
+  /* Base */
+  --bg: #080808;
+  --card: #111111;
+  --text: #ffffff;
+  --muted: #a0a0a0;
+  --border: #252525;
+
+  /* Burgundy */
+  --primary: #8b1a1a;
+  --primary-hover: #a52a2a;
+  --accent: #b33a3a;
+  --accent-light: #2a1111;
+
+  /* Effects */
+  --shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+  --glass: rgba(17, 17, 17, 0.78);
+}
+/* =========================
+   Tailwind Theme
+========================= */
+
+@theme {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+}
+
+/* =========================
+   Typography
+========================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.logo,
+.font-serif {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+p,
+span,
+a,
+button,
+input,
+textarea,
+select {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+/* =========================
+   Links
+========================= */
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================
+   Luxury Cards
+========================= */
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+
+  border-radius: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  border-radius: 20px;
+
+  box-shadow: var(--shadow);
+
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+/* =========================
+   Buttons
+========================= */
+
+button {
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+/* =========================
+   Inputs
+========================= */
+
+input,
+textarea,
+select {
+  width: 100%;
+  background: var(--card);
+  color: var(--text);
+
+  border: 1px solid var(--border);
+  outline: none;
+
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+
+  box-shadow:
+    0 0 0 3px rgba(194, 152, 90, 0.14);
+}
+
+/* =========================
+   Images
+========================= */
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* =========================
+   Scrollbar
+========================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-hover);
+}
+
+/* =========================
+   Selection
+========================= */
+
+::selection {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* =========================
+   Luxury Background
+========================= */
+
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at 0% 0%,
+      rgba(194, 152, 90, 0.07),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(194, 152, 90, 0.04),
+      transparent 35%
+    );
+
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* =========================
+   Marquee Ticker
+   Usage:
+   <div class="marquee">
+     <div class="marquee-track">
+       ...items...   (render the item list TWICE in JSX for a seamless loop)
+     </div>
+   </div>
+========================= */
+
+.marquee {
+  overflow: hidden;
+  position: relative;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+}
+
+.marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  animation: marquee 26s linear infinite;
+  will-change: transform;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

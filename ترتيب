@@ -1,0 +1,52 @@
+اليوم 1 — أساس السيرفر
+الفولدر ستركتشر + .env + الاتصال بـ MongoDB
+الموديلز كلهم: User, Category, Product, Cart, Order
+authController: register + login بـ JWT عادي (من غير OTP)
+تجربة الـ endpoints على Postman
+
+نهاية اليوم: تقدر تعمل يوزر وتسجل دخول وتاخد توكن.
+
+اليوم 2 — Products & Categories (سيرفر)
+categoryController (CRUD)
+productController (CRUD كامل مع الـ variants: لون/مقاس/سعر/عرض)
+protect middleware + حماية الـ routes اللي محتاجة أدمن
+تجربة كل حاجة بـ Postman بأمثلة فيها ألوان ومقاسات فعلية
+
+نهاية اليوم: السيرفر كله شغال ومحتاج بس رفع صور (هنأجله لـ Cloudinary بعدين).
+
+اليوم 3 — أساس الكلاينت + Auth
+الستركتشر + store.js + axiosInstance.js
+authSlice + صفحة Login/Register متصلة فعليًا بالسيرفر
+ProtectedRoute / AdminRoute
+
+نهاية اليوم: تقدر تسجل من الفرونت وتدخل على صفحات محمية.
+
+اليوم 4 — عرض المنتجات + Cart
+productSlice + categorySlice
+صفحة Products.jsx (عرض + فلترة بسيطة حسب اللون/المقاس)
+صفحة ProductDetails.jsx مع VariantSelector
+cartSlice (في الـ Redux بس لسه، من غير باك إند)
+
+نهاية اليوم: عندك MVP كامل: تسجيل + تصفح منتجات + سلة تشتغل قدامك.
+
+اليوم 5 — Checkout + Orders (الربط الكامل)
+orderController (سيرفر) + orderSlice (كلاينت)
+صفحة Checkout.jsx بترسل الأوردر بعنوان الشحن
+صفحة Orders.jsx تعرض أوردرات اليوزر
+تجربة الفلو الكامل من الأول للآخر: تسجيل → تصفح → سلة → أوردر
+
+نهاية اليوم: المشروع شغال end-to-end بالكامل، وده أهم يوم في الخطة.
+
+اليوم 6 — Cloudinary + لمسة الأدمن
+ربط Cloudinary (رفع صور المنتجات من AddProduct.jsx/EditProduct.jsx)
+تجهيز صفحات الأدمن الأساسية: Dashboard, Products, Categories, OrdersAdmin
+شكل عام بسيط بالـ Tailwind + Framer Motion (زي الأسلوب اللي بتحبه)
+
+نهاية اليوم: المشروع بقى فيه لوحة تحكم فعلية ورفع صور شغال.
+
+اليوم 7 — OTP + تلميع نهائي
+إضافة otp field + Resend لتفعيل الحساب بعد الـ register
+اختبار شامل للفلو كله (يوزر جديد → verify → شراء → أدمن يشوف الأوردر)
+إصلاح أي باجات ظهرت + رفع على Vercel/Render
+
+نهاية اليوم: مشروع كامل ومنشور.
