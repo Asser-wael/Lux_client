@@ -3,71 +3,58 @@ import { store } from "../app/store";
 import { setAccessToken, logoutUser } from "../features/auth/authSlice";
 
 const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
-    withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
 });
 
-// Request
+// Request Interceptor
 axiosInstance.interceptors.request.use((config) => {
+  const token = store.getState().auth.accessToken;
 
-    const token = store.getState().auth.accessToken;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
+  return config;
 });
 
-// Response
+// Response Interceptor
 axiosInstance.interceptors.response.use(
+  (response) => response,
 
-    (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-    async (error) => {
+    if (
+      error.response?.status === 401 &&
+      error.response?.data?.code === "TOKEN_EXPIRED" &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
 
-        const originalRequest = error.config;
+      try {
+        // Use bare axios to prevent infinite interceptor loops
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
 
-        if (
-            error.response?.status === 401 &&
-            error.response?.data?.code === "TOKEN_EXPIRED" &&
-            !originalRequest._retry
-        ) {
+        store.dispatch(setAccessToken(data.accessToken));
 
-            originalRequest._retry = true;
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
-            try {
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        store.dispatch(logoutUser());
+        window.location.href = "/login";
 
-                const { data } = await axiosInstance.post(
-                    "/auth/refresh",
-                    {},
-                    {
-                        withCredentials: true,
-                    }
-                );
-
-                store.dispatch(
-                    setAccessToken(data.accessToken)
-                );
-
-                originalRequest.headers.Authorization =
-                    `Bearer ${data.accessToken}`;
-
-                return axiosInstance(originalRequest);
-                console.log("Refresh Success");
-
-            } catch {
-                console.log("Refresh Failed");
-                store.dispatch(logoutUser());
-
-                window.location.href = "/login";
-
-                return Promise.reject(error);
-            }
-        }
-
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
+      }
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default axiosInstance;
