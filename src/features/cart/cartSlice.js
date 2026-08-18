@@ -118,6 +118,7 @@ const findItemIndex = (items, productId, color, size) =>
 
 const initialState = {
   items: [],
+  BuyNowitem: null,
   loading: false, // getCart (initial full load)
   actionLoading: false, // add / update / remove / clear
   error: null,
@@ -125,10 +126,17 @@ const initialState = {
 
 const cartSlice = createSlice({
   name: "cart",
+
   initialState,
   reducers: {
     // optimistic local quantity bump, useful for instant UI feedback
     // before the updateCartItem thunk resolves
+    BuyNowitem: (state, action) => {
+      state.BuyNowitem = action.payload
+    },
+    clearBuyNowitem: (state, action) => {
+      state.BuyNowitem = null
+    },
     setLocalQuantity: (state, action) => {
       const { productId, color, size, quantity } = action.payload;
       const index = findItemIndex(state.items, productId, color, size);
@@ -225,5 +233,6 @@ export const selectCartTotal = (state) =>
     return sum + price * item.quantity;
   }, 0);
 
-export const { setLocalQuantity, resetCartState } = cartSlice.actions;
+export const { setLocalQuantity, resetCartState,BuyNowitem
+,clearBuyNowitem } = cartSlice.actions;
 export default cartSlice.reducer;

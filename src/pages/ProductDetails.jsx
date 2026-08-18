@@ -11,6 +11,7 @@ import {
 
 import {
   addToCart,
+  BuyNowitem,
   selectCartActionLoading,
 } from "../features/cart/cartSlice";
 
@@ -396,6 +397,7 @@ function ReviewsSection({ product, productId }) {
 export default function ProductDetails() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { productDetails, detailsLoading } = useSelector(
     (state) => state.products
@@ -626,8 +628,8 @@ export default function ProductDetails() {
                       onClick={() => changeColor(variant)}
                       title={colorName}
                       className={`h-10 w-10 rounded-full border-2 transition-all ${isSelected
-                          ? "border-primary scale-110"
-                          : "border-border"
+                        ? "border-primary scale-110"
+                        : "border-border"
                         }`}
                       style={{
                         backgroundColor:
@@ -665,8 +667,8 @@ export default function ProductDetails() {
                         setQuantity(1);
                       }}
                       className={`rounded-xl border px-6 py-3 transition-all uppercase ${isSelected
-                          ? "border-primary bg-primary text-white"
-                          : "border-border hover:border-primary"
+                        ? "border-primary bg-primary text-white"
+                        : "border-border hover:border-primary"
                         } ${outOfStock
                           ? "cursor-not-allowed opacity-40"
                           : ""
@@ -730,8 +732,8 @@ export default function ProductDetails() {
 
               <span
                 className={`text-xs font-semibold ${!isOutOfStock
-                    ? "text-green-600"
-                    : "text-red-500"
+                  ? "text-green-600"
+                  : "text-red-500"
                   }`}
               >
                 {!isOutOfStock
@@ -795,6 +797,11 @@ export default function ProductDetails() {
           <button
             type="button"
             disabled={isOutOfStock}
+            onClick={() => {
+              dispatch(BuyNowitem(currentProduct))
+              navigate("/checkout")
+            }
+            }
             className="mt-3 w-full rounded-xl border border-primary px-5 py-4 font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             Buy Now
