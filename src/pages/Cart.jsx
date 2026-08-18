@@ -43,9 +43,8 @@ const itemVariants = {
     },
   },
 };
-
 export default function Cart() {
-  const { items, loading, actionLoading, error } = useSelector(
+  const { items = [], loading, actionLoading, error } = useSelector(
     (state) => state.cart
   );
 
