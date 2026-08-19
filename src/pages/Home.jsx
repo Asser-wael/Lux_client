@@ -197,7 +197,12 @@ export default function Home() {
     dispatch(getPopularProducts());
     dispatch(getLatestProducts());
   }, [dispatch]);
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
   return (
     <main className="w-full min-h-screen bg-[var(--bg)] text-[var(--text)] overflow-hidden">
       {/* ============================================================

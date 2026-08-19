@@ -343,7 +343,12 @@ function ReviewsSection({
   const reviewsCount = Number(
     product?.numReviews || reviews.length || 0
   );
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
   return (
     <motion.section
       initial="hidden"
@@ -485,8 +490,8 @@ function ReviewsSection({
                       <span className="text-xs text-muted">
                         {review.createdAt
                           ? new Date(
-                              review.createdAt
-                            ).toLocaleDateString()
+                            review.createdAt
+                          ).toLocaleDateString()
                           : ""}
                       </span>
                     </div>
@@ -876,10 +881,10 @@ export default function ProductDetails() {
             <span className="text-sm text-muted">
               {currentProduct.numReviews
                 ? `${Number(
-                    currentProduct.rating || 0
-                  ).toFixed(
-                    1
-                  )} (${currentProduct.numReviews} reviews)`
+                  currentProduct.rating || 0
+                ).toFixed(
+                  1
+                )} (${currentProduct.numReviews} reviews)`
                 : "No ratings yet"}
             </span>
           </div>
@@ -896,61 +901,60 @@ export default function ProductDetails() {
 
           {currentProduct.variants?.length >
             0 && (
-            <div className="mt-6">
-              <h3 className="mb-3 text-sm font-bold uppercase tracking-wider">
-                Color
-              </h3>
+              <div className="mt-6">
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider">
+                  Color
+                </h3>
 
-              <div className="flex flex-wrap gap-3">
-                {currentProduct.variants.map(
-                  (variant, index) => {
-                    const colorName =
-                      variant?.color?.name;
+                <div className="flex flex-wrap gap-3">
+                  {currentProduct.variants.map(
+                    (variant, index) => {
+                      const colorName =
+                        variant?.color?.name;
 
-                    if (!colorName) {
-                      return null;
+                      if (!colorName) {
+                        return null;
+                      }
+
+                      const isSelected =
+                        color?.color?.name ===
+                        colorName;
+
+                      return (
+                        <button
+                          key={`${colorName}-${index}`}
+                          type="button"
+                          onClick={() =>
+                            changeColor(variant)
+                          }
+                          title={colorName}
+                          aria-label={`Select ${colorName}`}
+                          className={`h-10 w-10 rounded-full border-2 transition-all ${isSelected
+                              ? "scale-110 border-primary ring-2 ring-primary/20"
+                              : "border-border hover:scale-105"
+                            }`}
+                          style={{
+                            backgroundColor:
+                              colorNameToHex(
+                                colorName
+                              ),
+                          }}
+                        />
+                      );
                     }
+                  )}
+                </div>
 
-                    const isSelected =
-                      color?.color?.name ===
-                      colorName;
-
-                    return (
-                      <button
-                        key={`${colorName}-${index}`}
-                        type="button"
-                        onClick={() =>
-                          changeColor(variant)
-                        }
-                        title={colorName}
-                        aria-label={`Select ${colorName}`}
-                        className={`h-10 w-10 rounded-full border-2 transition-all ${
-                          isSelected
-                            ? "scale-110 border-primary ring-2 ring-primary/20"
-                            : "border-border hover:scale-105"
-                        }`}
-                        style={{
-                          backgroundColor:
-                            colorNameToHex(
-                              colorName
-                            ),
-                        }}
-                      />
-                    );
-                  }
+                {color?.color?.name && (
+                  <p className="mt-2 text-xs text-muted">
+                    Selected:{" "}
+                    <span className="font-semibold text-text">
+                      {color.color.name}
+                    </span>
+                  </p>
                 )}
               </div>
-
-              {color?.color?.name && (
-                <p className="mt-2 text-xs text-muted">
-                  Selected:{" "}
-                  <span className="font-semibold text-text">
-                    {color.color.name}
-                  </span>
-                </p>
-              )}
-            </div>
-          )}
+            )}
 
           {/* =================================================
               SIZES
@@ -985,15 +989,13 @@ export default function ProductDetails() {
                         onClick={() =>
                           changeSize(size)
                         }
-                        className={`rounded-xl border px-6 py-3 uppercase transition-all ${
-                          isSelected
+                        className={`rounded-xl border px-6 py-3 uppercase transition-all ${isSelected
                             ? "border-primary bg-primary text-white"
                             : "border-border hover:border-primary"
-                        } ${
-                          outOfStock
+                          } ${outOfStock
                             ? "cursor-not-allowed opacity-40 line-through"
                             : ""
-                        }`}
+                          }`}
                       >
                         {sizeName}
                       </button>
@@ -1071,11 +1073,10 @@ export default function ProductDetails() {
               </span>
 
               <span
-                className={`text-xs font-semibold ${
-                  !isOutOfStock
+                className={`text-xs font-semibold ${!isOutOfStock
                     ? "text-green-600"
                     : "text-red-500"
-                }`}
+                  }`}
               >
                 {!isOutOfStock
                   ? `${stock} In Stock`

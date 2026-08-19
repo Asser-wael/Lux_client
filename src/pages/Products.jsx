@@ -211,11 +211,10 @@ function FilterPanel({
         <div className="flex flex-col gap-1.5">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`text-left text-sm px-3 py-2 rounded-xl transition-colors ${
-              !selectedCategory
+            className={`text-left text-sm px-3 py-2 rounded-xl transition-colors ${!selectedCategory
                 ? "bg-[var(--primary)]/10 text-[var(--primary)] font-semibold"
                 : "text-[var(--text)] hover:bg-[var(--border)]/50"
-            }`}
+              }`}
           >
             All Products
           </button>
@@ -223,11 +222,10 @@ function FilterPanel({
             <button
               key={cat._id}
               onClick={() => setSelectedCategory(cat._id)}
-              className={`text-left text-sm px-3 py-2 rounded-xl transition-colors ${
-                selectedCategory === cat._id
+              className={`text-left text-sm px-3 py-2 rounded-xl transition-colors ${selectedCategory === cat._id
                   ? "bg-[var(--primary)]/10 text-[var(--primary)] font-semibold"
                   : "text-[var(--text)] hover:bg-[var(--border)]/50"
-              }`}
+                }`}
             >
               {cat.name}
             </button>
@@ -289,11 +287,10 @@ function FilterPanel({
                   key={name}
                   onClick={() => toggleColor(name)}
                   title={name}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    active
+                  className={`w-8 h-8 rounded-full border-2 transition-all ${active
                       ? "border-[var(--primary)] scale-110"
                       : "border-[var(--border)]"
-                  }`}
+                    }`}
                   style={{ backgroundColor: colorNameToHex(name) }}
                 />
               );
@@ -315,11 +312,10 @@ function FilterPanel({
                 <button
                   key={size}
                   onClick={() => toggleSize(size)}
-                  className={`min-w-10 px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${
-                    active
+                  className={`min-w-10 px-3 py-2 text-xs font-semibold rounded-xl border transition-colors ${active
                       ? "bg-[var(--primary)] text-white border-[var(--primary)]"
                       : "border-[var(--border)] text-[var(--text)] hover:border-[var(--primary)]"
-                  }`}
+                    }`}
                 >
                   {size}
                 </button>
@@ -468,7 +464,12 @@ export default function Products() {
     "price-asc": "Price: Low to High",
     "price-desc": "Price: High to Low",
   };
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       {/* ===== HEADER ===== */}
@@ -536,11 +537,10 @@ export default function Products() {
                       setSortBy(key);
                       setSortOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--border)]/50 transition-colors ${
-                      sortBy === key
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[var(--border)]/50 transition-colors ${sortBy === key
                         ? "text-[var(--primary)] font-semibold"
                         : "text-[var(--text)]"
-                    }`}
+                      }`}
                   >
                     {label}
                   </button>
