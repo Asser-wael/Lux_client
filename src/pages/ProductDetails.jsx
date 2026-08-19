@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiStar, FiUser, FiMinus, FiPlus } from "react-icons/fi";
+import {
+  FiStar,
+  FiUser,
+  FiMinus,
+  FiPlus,
+} from "react-icons/fi";
 
 import {
   getProductDetails,
@@ -18,7 +23,10 @@ import {
 import Loading from "../components/common/Loading";
 import { colorNameToHex } from "../utils/colorMap";
 
-// Animation
+/* =========================================================
+   ANIMATION
+========================================================= */
+
 const fadeUp = {
   hidden: {
     opacity: 0,
@@ -36,19 +44,35 @@ const fadeUp = {
   }),
 };
 
-// Get cheapest product price
-function getMinPrice(item) {
+/* =========================================================
+   HELPERS
+========================================================= */
+
+const getSizePrice = (size) => {
+  if (!size) return 0;
+
+  const price = Number(size.price ?? 0);
+  const offerPrice = Number(size.offerPrice ?? 0);
+
+  if (offerPrice > 0 && offerPrice < price) {
+    return offerPrice;
+  }
+
+  return price;
+};
+
+const getMinPrice = (product) => {
   const sizes = [];
 
-  item?.variants?.forEach((variant) => {
-    variant.sizes?.forEach((size) => {
+  product?.variants?.forEach((variant) => {
+    variant?.sizes?.forEach((size) => {
       sizes.push(size);
     });
   });
 
   if (!sizes.length) {
     return {
-      price: "—",
+      price: null,
       oldPrice: null,
     };
   }
@@ -56,18 +80,16 @@ function getMinPrice(item) {
   let cheapest = sizes[0];
 
   sizes.forEach((size) => {
-    const sizePrice = Number(size.offerPrice || size.price || 0);
-    const cheapestPrice = Number(
-      cheapest.offerPrice || cheapest.price || 0
-    );
+    const currentPrice = getSizePrice(size);
+    const cheapestPrice = getSizePrice(cheapest);
 
-    if (sizePrice < cheapestPrice) {
+    if (currentPrice < cheapestPrice) {
       cheapest = size;
     }
   });
 
-  const price = Number(cheapest.price || 0);
-  const offerPrice = Number(cheapest.offerPrice || 0);
+  const price = Number(cheapest?.price ?? 0);
+  const offerPrice = Number(cheapest?.offerPrice ?? 0);
 
   if (offerPrice > 0 && offerPrice < price) {
     return {
@@ -80,84 +102,135 @@ function getMinPrice(item) {
     price,
     oldPrice: null,
   };
-}
+};
 
-// Show stars
-function StarRating({ value = 0, size = "text-base" }) {
+/* =========================================================
+   STAR RATING
+========================================================= */
+
+function StarRating({
+  value = 0,
+  size = "text-base",
+}) {
+  const roundedValue = Math.round(Number(value) || 0);
+
   return (
-    <div className={`flex items-center gap-0.5 text-primary ${size}`}>
+    <div
+      className={`flex items-center gap-0.5 text-primary ${size}`}
+      aria-label={`Rating ${roundedValue} out of 5`}
+    >
       {[1, 2, 3, 4, 5].map((star) => (
         <FiStar
           key={star}
-          className={star <= Math.round(value) ? "fill-current" : ""}
+          className={
+            star <= roundedValue
+              ? "fill-current"
+              : ""
+          }
         />
       ))}
     </div>
   );
 }
 
-// Select rating
-function StarPicker({ value, onChange }) {
+/* =========================================================
+   STAR PICKER
+========================================================= */
+
+function StarPicker({
+  value,
+  onChange,
+}) {
   const [hover, setHover] = useState(0);
 
   return (
     <div className="flex items-center gap-1">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          onMouseEnter={() => setHover(star)}
-          onMouseLeave={() => setHover(0)}
-          className="text-2xl text-primary transition-transform hover:scale-110"
-        >
-          <FiStar
-            className={
-              star <= (hover || value) ? "fill-current" : ""
-            }
-          />
-        </button>
-      ))}
+      {[1, 2, 3, 4, 5].map((star) => {
+        const active = star <= (hover || value);
+
+        return (
+          <button
+            key={star}
+            type="button"
+            aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+            onClick={() => onChange(star)}
+            onMouseEnter={() => setHover(star)}
+            onMouseLeave={() => setHover(0)}
+            className="text-2xl text-primary transition-transform hover:scale-110"
+          >
+            <FiStar
+              className={active ? "fill-current" : ""}
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-// Small product card
-function MiniProductCard({ item, index }) {
+/* =========================================================
+   MINI PRODUCT CARD
+========================================================= */
+
+function MiniProductCard({
+  item,
+  index,
+}) {
   const navigate = useNavigate();
-  const { price, oldPrice } = getMinPrice(item);
+
+  const {
+    price,
+    oldPrice,
+  } = getMinPrice(item);
 
   return (
     <motion.div
       custom={index}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{
+        once: true,
+        amount: 0.3,
+      }}
       variants={fadeUp}
-      onClick={() => navigate(`/products/${item._id}`)}
-      className="card group flex-shrink-0 w-44 sm:w-52 flex flex-col overflow-hidden cursor-pointer"
+      onClick={() =>
+        navigate(`/products/${item._id}`)
+      }
+      className="card group flex w-44 flex-shrink-0 cursor-pointer flex-col overflow-hidden sm:w-52"
     >
-      <div className="relative w-full aspect-[4/5] overflow-hidden bg-bg">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-        />
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-bg">
+        {item?.image ? (
+          <img
+            src={item.image}
+            alt={item.name || "Product"}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-muted">
+            No Image
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1 p-3 border-t border-border">
-        <span className="text-sm font-semibold text-text truncate">
+      <div className="flex flex-col gap-1 border-t border-border p-3">
+        <span className="truncate text-sm font-semibold text-text">
           {item.name}
         </span>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-text">
-            EGP {price}
-          </span>
+          {price !== null ? (
+            <span className="text-sm font-bold text-text">
+              EGP {Number(price).toLocaleString()}
+            </span>
+          ) : (
+            <span className="text-sm text-muted">
+              Price unavailable
+            </span>
+          )}
 
           {oldPrice !== null && (
             <span className="text-xs text-muted line-through">
-              EGP {oldPrice}
+              EGP {Number(oldPrice).toLocaleString()}
             </span>
           )}
         </div>
@@ -166,9 +239,16 @@ function MiniProductCard({ item, index }) {
   );
 }
 
-// Product row
-function ProductRail({ title, subtitle, items }) {
-  if (!items || !items.length) {
+/* =========================================================
+   PRODUCT RAIL
+========================================================= */
+
+function ProductRail({
+  title,
+  subtitle,
+  items,
+}) {
+  if (!Array.isArray(items) || !items.length) {
     return null;
   }
 
@@ -176,7 +256,10 @@ function ProductRail({ title, subtitle, items }) {
     <motion.section
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      viewport={{
+        once: true,
+        amount: 0.15,
+      }}
       variants={fadeUp}
       className="mx-auto max-w-7xl px-6 pb-16"
     >
@@ -186,13 +269,13 @@ function ProductRail({ title, subtitle, items }) {
         </h2>
 
         {subtitle && (
-          <p className="text-sm text-muted mt-1">
+          <p className="mt-1 text-sm text-muted">
             {subtitle}
           </p>
         )}
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
+      <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2 scrollbar-thin">
         {items.map((item, index) => (
           <MiniProductCard
             key={item._id}
@@ -205,68 +288,90 @@ function ProductRail({ title, subtitle, items }) {
   );
 }
 
-// Reviews
-function ReviewsSection({ product, productId }) {
+/* =========================================================
+   REVIEWS
+========================================================= */
+
+function ReviewsSection({
+  product,
+  productId,
+}) {
   const dispatch = useDispatch();
 
-  const user = useSelector((state) => state.auth?.user);
+  const user = useSelector(
+    (state) => state.auth?.user
+  );
+
   const reviewLoading = useSelector(
-    (state) => state.products.reviewLoading
+    (state) => state.products?.reviewLoading
   );
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  const reviews = product?.reviews || [];
+  const reviews = Array.isArray(product?.reviews)
+    ? product.reviews
+    : [];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!rating || !comment.trim()) {
+    const cleanComment = comment.trim();
+
+    if (!rating || !cleanComment || reviewLoading) {
       return;
     }
 
-    dispatch(
+    const result = await dispatch(
       addReview({
         productId,
         rating,
-        comment,
+        comment: cleanComment,
       })
-    ).then((result) => {
-      if (!result.error) {
-        setRating(0);
-        setComment("");
-      }
-    });
+    );
+
+    if (addReview.fulfilled.match(result)) {
+      setRating(0);
+      setComment("");
+    }
   };
+
+  const averageRating = Number(
+    product?.rating || 0
+  );
+
+  const reviewsCount = Number(
+    product?.numReviews || reviews.length || 0
+  );
 
   return (
     <motion.section
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.1 }}
+      viewport={{
+        once: true,
+        amount: 0.1,
+      }}
       variants={fadeUp}
       className="mx-auto max-w-7xl px-6 pb-20"
     >
       <div className="card p-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        {/* Header */}
+
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-text">
               Reviews
             </h2>
 
-            <div className="flex items-center gap-2 mt-2">
-              <StarRating value={product?.rating || 0} />
+            <div className="mt-2 flex items-center gap-2">
+              <StarRating value={averageRating} />
 
               <span className="text-sm text-muted">
-                {product?.rating
-                  ? product.rating.toFixed(1)
-                  : "0.0"}
-
+                {averageRating.toFixed(1)}
                 {" · "}
-
-                {product?.numReviews || 0}{" "}
-                {product?.numReviews === 1
+                {reviewsCount}{" "}
+                {reviewsCount === 1
                   ? "review"
                   : "reviews"}
               </span>
@@ -274,14 +379,16 @@ function ReviewsSection({ product, productId }) {
           </div>
         </div>
 
-        <div className="border border-border rounded-2xl p-6 mb-8">
+        {/* Add Review */}
+
+        <div className="mb-8 rounded-2xl border border-border p-6">
           {user ? (
             <form
               onSubmit={handleSubmit}
               className="flex flex-col gap-4"
             >
               <div>
-                <label className="block text-sm font-semibold text-text mb-2">
+                <label className="mb-2 block text-sm font-semibold text-text">
                   Your rating
                 </label>
 
@@ -292,17 +399,24 @@ function ReviewsSection({ product, productId }) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-text mb-2">
+                <label className="mb-2 block text-sm font-semibold text-text">
                   Your review
                 </label>
 
                 <textarea
                   value={comment}
-                  onChange={(e) => setComment(e.target.value)}
+                  onChange={(e) =>
+                    setComment(e.target.value)
+                  }
                   rows={3}
+                  maxLength={1000}
                   placeholder="Share what you thought about this piece…"
-                  className="w-full rounded-xl border border-border bg-transparent px-4 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-primary transition-colors resize-none"
+                  className="w-full resize-none rounded-xl border border-border bg-transparent px-4 py-3 text-sm text-text placeholder:text-muted transition-colors focus:border-primary focus:outline-none"
                 />
+
+                <div className="mt-1 text-right text-xs text-muted">
+                  {comment.length}/1000
+                </div>
               </div>
 
               <button
@@ -312,7 +426,7 @@ function ReviewsSection({ product, productId }) {
                   !rating ||
                   !comment.trim()
                 }
-                className="btn-primary self-start px-6 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary self-start rounded-xl px-6 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {reviewLoading
                   ? "Submitting..."
@@ -327,7 +441,7 @@ function ReviewsSection({ product, productId }) {
 
               <Link
                 to="/login"
-                className="btn-primary px-6 py-2.5 rounded-xl text-sm font-semibold"
+                className="btn-primary rounded-xl px-6 py-2.5 text-sm font-semibold"
               >
                 Log In to Review
               </Link>
@@ -335,9 +449,12 @@ function ReviewsSection({ product, productId }) {
           )}
         </div>
 
+        {/* Reviews List */}
+
         {!reviews.length ? (
           <p className="text-sm text-muted">
-            No reviews yet — be the first to share your thoughts.
+            No reviews yet — be the first to share
+            your thoughts.
           </p>
         ) : (
           <div className="flex flex-col divide-y divide-border">
@@ -345,21 +462,21 @@ function ReviewsSection({ product, productId }) {
               .slice()
               .sort(
                 (a, b) =>
-                  new Date(b.createdAt) -
-                  new Date(a.createdAt)
+                  new Date(b.createdAt || 0) -
+                  new Date(a.createdAt || 0)
               )
               .map((review) => (
                 <div
                   key={review._id}
                   className="py-5 first:pt-0 last:pb-0"
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-9 h-9 rounded-full bg-border flex items-center justify-center text-muted shrink-0">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-border text-muted">
                       <FiUser />
                     </div>
 
                     <div>
-                      <span className="text-sm font-semibold text-text block">
+                      <span className="block text-sm font-semibold text-text">
                         {review.name ||
                           review.user?.name ||
                           "Anonymous"}
@@ -368,8 +485,8 @@ function ReviewsSection({ product, productId }) {
                       <span className="text-xs text-muted">
                         {review.createdAt
                           ? new Date(
-                            review.createdAt
-                          ).toLocaleDateString()
+                              review.createdAt
+                            ).toLocaleDateString()
                           : ""}
                       </span>
                     </div>
@@ -382,7 +499,7 @@ function ReviewsSection({ product, productId }) {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted leading-6">
+                  <p className="text-sm leading-6 text-muted">
                     {review.comment}
                   </p>
                 </div>
@@ -394,37 +511,55 @@ function ReviewsSection({ product, productId }) {
   );
 }
 
+/* =========================================================
+   PRODUCT DETAILS
+========================================================= */
+
 export default function ProductDetails() {
   const { id } = useParams();
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { productDetails, detailsLoading } = useSelector(
+  const {
+    productDetails,
+    detailsLoading,
+  } = useSelector(
     (state) => state.products
   );
 
-  const {
-    product: currentProduct,
-    relatedProducts,
-    differentProducts,
-  } = productDetails;
+  const currentProduct =
+    productDetails?.product || null;
+
+  const relatedProducts =
+    productDetails?.relatedProducts || [];
+
+  const differentProducts =
+    productDetails?.differentProducts || [];
 
   const cartActionLoading = useSelector(
     selectCartActionLoading
   );
 
   const [color, setColor] = useState(null);
-  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedSize, setSelectedSize] =
+    useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Get product
+  /* =========================================================
+     GET PRODUCT
+  ========================================================= */
+
   useEffect(() => {
     if (id) {
       dispatch(getProductDetails(id));
     }
   }, [dispatch, id]);
 
-  // Scroll top
+  /* =========================================================
+     SCROLL TOP
+  ========================================================= */
+
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -432,7 +567,10 @@ export default function ProductDetails() {
     });
   }, [id]);
 
-  // Select first variant
+  /* =========================================================
+     INITIAL VARIANT
+  ========================================================= */
+
   useEffect(() => {
     if (!currentProduct?.variants?.length) {
       setColor(null);
@@ -441,63 +579,99 @@ export default function ProductDetails() {
       return;
     }
 
-    const firstVariant = currentProduct.variants[0];
+    const firstAvailableVariant =
+      currentProduct.variants.find(
+        (variant) =>
+          variant?.sizes?.some(
+            (size) =>
+              Number(size?.stock || 0) > 0
+          )
+      ) ||
+      currentProduct.variants[0];
 
-    const firstSize =
-      firstVariant.sizes?.find(
-        (size) => Number(size.stock || 0) > 0
+    const firstAvailableSize =
+      firstAvailableVariant?.sizes?.find(
+        (size) =>
+          Number(size?.stock || 0) > 0
       ) || null;
 
-    setColor(firstVariant);
-    setSelectedSize(firstSize);
+    setColor(firstAvailableVariant);
+    setSelectedSize(firstAvailableSize);
     setQuantity(1);
   }, [currentProduct]);
 
-  // Keep quantity inside stock
+  /* =========================================================
+     KEEP QUANTITY INSIDE STOCK
+  ========================================================= */
+
   useEffect(() => {
-    if (!selectedSize) {
+    const stock = Number(
+      selectedSize?.stock || 0
+    );
+
+    if (stock <= 0) {
       setQuantity(1);
       return;
     }
 
-    const stock = Number(selectedSize.stock || 0);
-
     setQuantity((prev) =>
       Math.min(
-        Math.max(prev, 1),
-        Math.max(stock, 1)
+        Math.max(Number(prev) || 1, 1),
+        stock
       )
     );
   }, [selectedSize]);
+
+  /* =========================================================
+     LOADING
+  ========================================================= */
 
   if (detailsLoading) {
     return <Loading />;
   }
 
+  /* =========================================================
+     NOT FOUND
+  ========================================================= */
+
   if (!currentProduct) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-text">
+      <div className="flex min-h-screen items-center justify-center bg-bg text-text">
         Product not found
       </div>
     );
   }
 
-  const stock = Number(selectedSize?.stock || 0);
+  /* =========================================================
+     CURRENT VARIANT DATA
+  ========================================================= */
+
+  const stock = Number(
+    selectedSize?.stock || 0
+  );
 
   const isOutOfStock =
     !selectedSize || stock <= 0;
 
-  const price = Number(selectedSize?.price || 0);
+  const price = Number(
+    selectedSize?.price ?? 0
+  );
+
   const offerPrice = Number(
-    selectedSize?.offerPrice || 0
+    selectedSize?.offerPrice ?? 0
   );
 
   const hasOffer =
-    offerPrice > 0 && offerPrice < price;
+    offerPrice > 0 &&
+    offerPrice < price;
 
   const finalPrice = hasOffer
     ? offerPrice
     : price;
+
+  /* =========================================================
+     QUANTITY
+  ========================================================= */
 
   const decreaseQuantity = () => {
     setQuantity((prev) =>
@@ -506,30 +680,65 @@ export default function ProductDetails() {
   };
 
   const increaseQuantity = () => {
+    if (isOutOfStock) return;
+
     setQuantity((prev) =>
       Math.min(stock, prev + 1)
     );
   };
 
+  /* =========================================================
+     CHANGE COLOR
+  ========================================================= */
+
   const changeColor = (variant) => {
+    if (!variant) return;
+
     setColor(variant);
 
-    const firstSize =
-      variant.sizes?.find(
-        (size) => Number(size.stock || 0) > 0
+    const firstAvailableSize =
+      variant?.sizes?.find(
+        (size) =>
+          Number(size?.stock || 0) > 0
       ) || null;
 
-    setSelectedSize(firstSize);
+    setSelectedSize(firstAvailableSize);
     setQuantity(1);
   };
 
+  /* =========================================================
+     CHANGE SIZE
+  ========================================================= */
+
+  const changeSize = (size) => {
+    if (!size) return;
+
+    if (Number(size.stock || 0) <= 0) {
+      return;
+    }
+
+    setSelectedSize(size);
+    setQuantity(1);
+  };
+
+  /* =========================================================
+     VALIDATION
+  ========================================================= */
+
+  const isValidSelection =
+    Boolean(
+      currentProduct?._id &&
+      color?.color?.name &&
+      selectedSize?.size &&
+      !isOutOfStock
+    );
+
+  /* =========================================================
+     ADD TO CART
+  ========================================================= */
+
   const handleAddToCart = () => {
-    if (
-      isOutOfStock ||
-      !currentProduct._id ||
-      !color?.color?.name ||
-      !selectedSize?.size
-    ) {
+    if (!isValidSelection) {
       return;
     }
 
@@ -543,20 +752,78 @@ export default function ProductDetails() {
     );
   };
 
+  /* =========================================================
+     BUY NOW
+  ========================================================= */
+
+  const handleBuyNow = () => {
+    if (!isValidSelection) {
+      return;
+    }
+
+    dispatch(
+      BuyNowitem({
+        product: {
+          _id: currentProduct._id,
+          name: currentProduct.name,
+          image: currentProduct.image,
+        },
+
+        productId: currentProduct._id,
+
+        name: currentProduct.name,
+
+        image: currentProduct.image,
+
+        /*
+          IMPORTANT:
+          Send primitive values, NOT objects.
+        */
+        color: color.color.name,
+
+        size: selectedSize.size,
+
+        price: finalPrice,
+
+        offerPrice: hasOffer
+          ? offerPrice
+          : null,
+
+        quantity,
+      })
+    );
+
+    navigate("/checkout");
+  };
+
+  /* =========================================================
+     UI
+  ========================================================= */
+
   return (
     <div className="min-h-screen bg-bg text-text">
 
-      {/* Breadcrumb */}
+      {/* =====================================================
+          BREADCRUMB
+      ===================================================== */}
+
       <div className="mx-auto max-w-7xl px-6 py-6">
         <div className="text-sm text-muted">
-          Home / Products / {currentProduct.name}
+          Home / Products /{" "}
+          {currentProduct.name}
         </div>
       </div>
 
-      {/* Product */}
+      {/* =====================================================
+          PRODUCT
+      ===================================================== */}
+
       <section className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 pb-12 lg:grid-cols-[1.1fr_1fr_0.7fr]">
 
-        {/* Image */}
+        {/* ===================================================
+            IMAGE
+        =================================================== */}
+
         <motion.div
           initial="hidden"
           animate="visible"
@@ -565,15 +832,24 @@ export default function ProductDetails() {
           className="card p-4"
         >
           <div className="aspect-[4/5] overflow-hidden rounded-xl bg-bg">
-            <img
-              src={currentProduct.image}
-              alt={currentProduct.name}
-              className="h-full w-full object-cover"
-            />
+            {currentProduct.image ? (
+              <img
+                src={currentProduct.image}
+                alt={currentProduct.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-muted">
+                No Image
+              </div>
+            )}
           </div>
         </motion.div>
 
-        {/* Details */}
+        {/* ===================================================
+            DETAILS
+        =================================================== */}
+
         <motion.div
           initial="hidden"
           animate="visible"
@@ -582,12 +858,15 @@ export default function ProductDetails() {
           className="py-4"
         >
           <span className="inline-block rounded-full border border-border px-4 py-1 text-xs uppercase tracking-widest text-primary">
-            {currentProduct.category?.name || "New Arrival"}
+            {currentProduct.category?.name ||
+              "New Arrival"}
           </span>
 
-          <h1 className="mt-5 text-5xl leading-tight">
+          <h1 className="mt-5 text-4xl leading-tight sm:text-5xl">
             {currentProduct.name}
           </h1>
+
+          {/* Rating */}
 
           <div className="mt-4 flex items-center gap-3">
             <StarRating
@@ -597,52 +876,86 @@ export default function ProductDetails() {
             <span className="text-sm text-muted">
               {currentProduct.numReviews
                 ? `${Number(
-                  currentProduct.rating || 0
-                ).toFixed(1)} (${currentProduct.numReviews} reviews)`
+                    currentProduct.rating || 0
+                  ).toFixed(
+                    1
+                  )} (${currentProduct.numReviews} reviews)`
                 : "No ratings yet"}
             </span>
           </div>
+
+          {/* Description */}
 
           <p className="mt-6 leading-8 text-muted">
             {currentProduct.description}
           </p>
 
-          {/* Colors */}
-          {currentProduct.variants?.length > 0 && (
+          {/* =================================================
+              COLORS
+          ================================================= */}
+
+          {currentProduct.variants?.length >
+            0 && (
             <div className="mt-6">
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wider">
                 Color
               </h3>
 
               <div className="flex flex-wrap gap-3">
-                {currentProduct.variants.map((variant) => {
-                  const colorName = variant.color?.name;
+                {currentProduct.variants.map(
+                  (variant, index) => {
+                    const colorName =
+                      variant?.color?.name;
 
-                  const isSelected =
-                    color?.color?.name === colorName;
+                    if (!colorName) {
+                      return null;
+                    }
 
-                  return (
-                    <button
-                      key={colorName}
-                      type="button"
-                      onClick={() => changeColor(variant)}
-                      title={colorName}
-                      className={`h-10 w-10 rounded-full border-2 transition-all ${isSelected
-                        ? "border-primary scale-110"
-                        : "border-border"
+                    const isSelected =
+                      color?.color?.name ===
+                      colorName;
+
+                    return (
+                      <button
+                        key={`${colorName}-${index}`}
+                        type="button"
+                        onClick={() =>
+                          changeColor(variant)
+                        }
+                        title={colorName}
+                        aria-label={`Select ${colorName}`}
+                        className={`h-10 w-10 rounded-full border-2 transition-all ${
+                          isSelected
+                            ? "scale-110 border-primary ring-2 ring-primary/20"
+                            : "border-border hover:scale-105"
                         }`}
-                      style={{
-                        backgroundColor:
-                          colorNameToHex(colorName),
-                      }}
-                    />
-                  );
-                })}
+                        style={{
+                          backgroundColor:
+                            colorNameToHex(
+                              colorName
+                            ),
+                        }}
+                      />
+                    );
+                  }
+                )}
               </div>
+
+              {color?.color?.name && (
+                <p className="mt-2 text-xs text-muted">
+                  Selected:{" "}
+                  <span className="font-semibold text-text">
+                    {color.color.name}
+                  </span>
+                </p>
+              )}
             </div>
           )}
 
-          {/* Sizes */}
+          {/* =================================================
+              SIZES
+          ================================================= */}
+
           {color?.sizes?.length > 0 && (
             <div className="mt-6">
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wider">
@@ -650,40 +963,52 @@ export default function ProductDetails() {
               </h3>
 
               <div className="flex flex-wrap gap-3">
-                {color.sizes.map((size) => {
-                  const isSelected =
-                    selectedSize?.size === size.size;
+                {color.sizes.map(
+                  (size, index) => {
+                    const sizeName =
+                      size?.size;
 
-                  const outOfStock =
-                    Number(size.stock || 0) <= 0;
+                    const isSelected =
+                      selectedSize?.size ===
+                      sizeName;
 
-                  return (
-                    <button
-                      key={size.size}
-                      type="button"
-                      disabled={outOfStock}
-                      onClick={() => {
-                        setSelectedSize(size);
-                        setQuantity(1);
-                      }}
-                      className={`rounded-xl border px-6 py-3 transition-all uppercase ${isSelected
-                        ? "border-primary bg-primary text-white"
-                        : "border-border hover:border-primary"
-                        } ${outOfStock
-                          ? "cursor-not-allowed opacity-40"
-                          : ""
+                    const outOfStock =
+                      Number(
+                        size?.stock || 0
+                      ) <= 0;
+
+                    return (
+                      <button
+                        key={`${sizeName}-${index}`}
+                        type="button"
+                        disabled={outOfStock}
+                        onClick={() =>
+                          changeSize(size)
+                        }
+                        className={`rounded-xl border px-6 py-3 uppercase transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary text-white"
+                            : "border-border hover:border-primary"
+                        } ${
+                          outOfStock
+                            ? "cursor-not-allowed opacity-40 line-through"
+                            : ""
                         }`}
-                    >
-                      {size.size}
-                    </button>
-                  );
-                })}
+                      >
+                        {sizeName}
+                      </button>
+                    );
+                  }
+                )}
               </div>
             </div>
           )}
         </motion.div>
 
-        {/* Buy Card */}
+        {/* ===================================================
+            BUY CARD
+        =================================================== */}
+
         <motion.div
           initial="hidden"
           animate="visible"
@@ -695,9 +1020,21 @@ export default function ProductDetails() {
             Select Variant
           </h3>
 
+          {/* Selected Variant */}
+
           <div className="rounded-lg border border-border px-4 py-4">
 
             <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">
+                Color
+              </span>
+
+              <span className="font-semibold">
+                {color?.color?.name || "—"}
+              </span>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between">
               <span className="text-sm text-muted">
                 Size
               </span>
@@ -715,12 +1052,15 @@ export default function ProductDetails() {
               <div className="flex items-center gap-2">
                 {hasOffer && (
                   <span className="text-sm text-muted line-through">
-                    EGP {price}
+                    EGP{" "}
+                    {price.toLocaleString()}
                   </span>
                 )}
 
                 <span className="font-semibold text-primary">
-                  EGP {finalPrice || "—"}
+                  {finalPrice > 0
+                    ? `EGP ${finalPrice.toLocaleString()}`
+                    : "—"}
                 </span>
               </div>
             </div>
@@ -731,10 +1071,11 @@ export default function ProductDetails() {
               </span>
 
               <span
-                className={`text-xs font-semibold ${!isOutOfStock
-                  ? "text-green-600"
-                  : "text-red-500"
-                  }`}
+                className={`text-xs font-semibold ${
+                  !isOutOfStock
+                    ? "text-green-600"
+                    : "text-red-500"
+                }`}
               >
                 {!isOutOfStock
                   ? `${stock} In Stock`
@@ -743,7 +1084,10 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* Quantity */}
+          {/* =================================================
+              QUANTITY
+          ================================================= */}
+
           <div className="mt-6">
             <label className="mb-2 block text-sm font-semibold">
               Quantity
@@ -752,11 +1096,15 @@ export default function ProductDetails() {
             <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
               <button
                 type="button"
-                onClick={decreaseQuantity}
-                disabled={
-                  isOutOfStock || quantity <= 1
+                aria-label="Decrease quantity"
+                onClick={
+                  decreaseQuantity
                 }
-                className="text-lg disabled:opacity-30"
+                disabled={
+                  isOutOfStock ||
+                  quantity <= 1
+                }
+                className="text-lg transition hover:text-primary disabled:opacity-30"
               >
                 <FiMinus />
               </button>
@@ -767,23 +1115,31 @@ export default function ProductDetails() {
 
               <button
                 type="button"
-                onClick={increaseQuantity}
-                disabled={
-                  isOutOfStock || quantity >= stock
+                aria-label="Increase quantity"
+                onClick={
+                  increaseQuantity
                 }
-                className="text-lg disabled:opacity-30"
+                disabled={
+                  isOutOfStock ||
+                  quantity >= stock
+                }
+                className="text-lg transition hover:text-primary disabled:opacity-30"
               >
                 <FiPlus />
               </button>
             </div>
           </div>
 
-          {/* Cart */}
+          {/* =================================================
+              ADD TO CART
+          ================================================= */}
+
           <button
             type="button"
             onClick={handleAddToCart}
             disabled={
-              isOutOfStock || cartActionLoading
+              !isValidSelection ||
+              cartActionLoading
             }
             className="btn-primary mt-6 w-full rounded-xl px-5 py-4 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -794,33 +1150,41 @@ export default function ProductDetails() {
                 : "Add To Cart"}
           </button>
 
+          {/* =================================================
+              BUY NOW
+          ================================================= */}
+
           <button
             type="button"
-            disabled={isOutOfStock}
-            onClick={() => {
-              dispatch(BuyNowitem({
-                name: currentProduct.name,
-                image: currentProduct.image,
-                color: color,
-                size: selectedSize,
-                price: finalPrice,
-                quantity: quantity,
-              }))
-              navigate("/checkout")
-            }
-            }
-            className="mt-3 w-full rounded-xl border border-primary px-5 py-4 font-semibold text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!isValidSelection}
+            onClick={handleBuyNow}
+            className="mt-3 w-full rounded-xl border border-primary px-5 py-4 font-semibold text-primary transition hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Buy Now
           </button>
+
+          {/* Selection warning */}
+
+          {!selectedSize && (
+            <p className="mt-3 text-center text-xs text-muted">
+              Please select an available color
+              and size.
+            </p>
+          )}
         </motion.div>
       </section>
 
-      {/* Product Details */}
+      {/* =====================================================
+          PRODUCT DETAILS
+      ===================================================== */}
+
       <motion.section
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{
+          once: true,
+          amount: 0.2,
+        }}
         variants={fadeUp}
         className="mx-auto max-w-7xl px-6 pb-16"
       >
@@ -835,21 +1199,30 @@ export default function ProductDetails() {
         </div>
       </motion.section>
 
-      {/* Related */}
+      {/* =====================================================
+          RELATED
+      ===================================================== */}
+
       <ProductRail
         title="You Might Also Like"
         subtitle="More from the same category"
         items={relatedProducts}
       />
 
-      {/* Different */}
+      {/* =====================================================
+          DIFFERENT
+      ===================================================== */}
+
       <ProductRail
         title="Explore Something Different"
         subtitle="A different side of the collection"
         items={differentProducts}
       />
 
-      {/* Reviews */}
+      {/* =====================================================
+          REVIEWS
+      ===================================================== */}
+
       <ReviewsSection
         product={currentProduct}
         productId={id}
