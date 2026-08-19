@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../api/axiosInstance";
 import { showToast } from "../../utils/showToast.jsx";
-import axios from "axios";
-
 
 export const registerUser = createAsyncThunk(
   "auth/register",
   async (data, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(`/auth/register`, data);
-
       showToast(res.data);
       return res.data;
     } catch (err) {
@@ -17,6 +14,7 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
+
 export const loginUser = createAsyncThunk(
   "auth/login",
   async (data, { rejectWithValue, dispatch }) => {
@@ -25,7 +23,6 @@ export const loginUser = createAsyncThunk(
       dispatch(setAccessToken(res.data.accessToken));
       localStorage.setItem("accessToken", res.data.accessToken);
       showToast(res.data);
-
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
@@ -35,22 +32,21 @@ export const loginUser = createAsyncThunk(
 
 export const getUser = createAsyncThunk(
   "auth/getUser",
-  async (data, { rejectWithValue, dispatch }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.get("/auth/user");
-
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
     }
   }
 );
+
 export const getNotifications = createAsyncThunk(
   "auth/getNotifications",
-  async (data, { rejectWithValue, dispatch }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.get("/auth/user/getNotifications");
-
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Error");
@@ -58,20 +54,24 @@ export const getNotifications = createAsyncThunk(
   }
 );
 
+/*
+ * logoutUser: بيحاول يبلغ السيرفر (best effort) عشان يمسح
+ * الـ Subscription والكوكي، لكن حتى لو السيرفر فشل، الحالة
+ * المحلية (redux + localStorage) بتتمسح برضه في الـ .fulfilled/.rejected
+ * عشان اليوزر ميفضلش عالق "لوج إن" في الواجهة.
+ */
 export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await axiosInstance.post(
-        "/auth/logout",
-        {},
-        { withCredentials: true }
-      );
+      await axiosInstance.post("/auth/logout", {}, { withCredentials: true });
       return true;
     } catch (err) {
       return rejectWithValue(err.response?.data);
     }
-  })
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -88,6 +88,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload;
     },
 
+    // بتتنادى من axiosInstance لما الـ refresh يفشل نهائيًا (local-only logout)
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
@@ -124,7 +125,7 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      // Logout
+      // Logout - بيمسح الحالة المحلية سواء نجح السيرفر ولا لأ
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })
@@ -134,11 +135,13 @@ const authSlice = createSlice({
         state.accessToken = null;
         localStorage.removeItem("accessToken");
       })
-      .addCase(logoutUser.rejected, (state, action) => {
+      .addCase(logoutUser.rejected, (state) => {
         state.loading = false;
-        state.error = action.payload;
+        state.user = null;
+        state.accessToken = null;
+        localStorage.removeItem("accessToken");
       });
-  }
+  },
 });
 
 export const { logout, setAccessToken } = authSlice.actions;

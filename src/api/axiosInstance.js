@@ -1,6 +1,6 @@
 import axios from "axios";
 import { store } from "../app/store";
-import { setAccessToken, logout, logoutUser } from "../features/auth/authSlice";
+import { setAccessToken, logout } from "../features/auth/authSlice";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,6 +27,42 @@ axiosInstance.interceptors.request.use(
 );
 
 /* =========================================================
+   REFRESH QUEUE
+   عشان لو أكتر من request فشلوا في نفس اللحظة (401)،
+   يعملوا refresh واحد بس مش واحد لكل request
+========================================================= */
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function subscribeTokenRefresh(callback) {
+  refreshSubscribers.push(callback);
+}
+
+function onRefreshed(newToken) {
+  refreshSubscribers.forEach((callback) => callback(newToken));
+  refreshSubscribers = [];
+}
+
+function onRefreshFailed() {
+  refreshSubscribers.forEach((callback) => callback(null));
+  refreshSubscribers = [];
+}
+
+/*
+ * Local-only logout: بيمسح الحالة في الـ redux + localStorage
+ * من غير ما يبعت أي request للسيرفر (عشان منقعش في loop)
+ */
+function forceLocalLogout() {
+  store.dispatch(logout());
+  localStorage.removeItem("accessToken");
+
+  if (window.location.pathname !== "/login") {
+    window.location.replace("/login");
+  }
+}
+
+/* =========================================================
    RESPONSE INTERCEPTOR
 ========================================================= */
 
@@ -36,97 +72,81 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    /*
-     * No response = network/CORS/etc.
-     */
+    // مفيش response خالص = مشكلة شبكة / CORS
     if (!error.response) {
       return Promise.reject(error);
     }
 
-    /*
-     * Only refresh when:
-     *
-     * 401
-     * TOKEN_EXPIRED
-     * request wasn't retried before
-     */
-    if (
+    const isTokenExpired =
       error.response.status === 401 &&
-      error.response.data?.code === "TOKEN_EXPIRED" &&
-      !originalRequest?._retry
-    ) {
-      originalRequest._retry = true;
+      error.response.data?.code === "TOKEN_EXPIRED";
 
-      try {
-        /*
-         * IMPORTANT:
-         * Use plain axios here, NOT axiosInstance.
-         *
-         * This prevents the refresh request itself
-         * from entering this interceptor.
-         */
-        const response = await axios.post(
-          `${API_URL}/auth/refresh`,
-          {},
-          {
-            withCredentials: true,
-          }
-        );
-
-        const newAccessToken =
-          response.data.accessToken;
-
-        if (!newAccessToken) {
-          throw new Error(
-            "Refresh response does not contain accessToken"
-          );
-        }
-
-        /*
-         * Save new access token
-         */
-        store.dispatch(
-          setAccessToken(newAccessToken)
-        );
-
-        /*
-         * Update original request
-         */
-        originalRequest.headers = {
-          ...originalRequest.headers,
-          Authorization: `Bearer ${newAccessToken}`,
-        };
-
-        /*
-         * Retry original request
-         */
-        return axiosInstance(originalRequest);
-
-      } catch (refreshError) {
-
-        console.error(
-          "Refresh token failed:",
-          refreshError.response?.data ||
-            refreshError.message
-        );
-
-
-        store.dispatch(logoutUser());
-
-        /*
-         * Redirect only once
-         */
-        if (
-          window.location.pathname !== "/login"
-        ) {
-          window.location.replace("/login");
-        }
-
-        return Promise.reject(refreshError);
-      }
+    if (!isTokenExpired || originalRequest?._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    originalRequest._retry = true;
+
+    // لو فيه refresh شغال بالفعل، استنى نتيجته بدل ما تعمل واحد جديد
+    if (isRefreshing) {
+      return new Promise((resolve, reject) => {
+        subscribeTokenRefresh((newToken) => {
+          if (!newToken) {
+            reject(error);
+            return;
+          }
+          originalRequest.headers = {
+            ...originalRequest.headers,
+            Authorization: `Bearer ${newToken}`,
+          };
+          resolve(axiosInstance(originalRequest));
+        });
+      });
+    }
+
+    isRefreshing = true;
+
+    try {
+      // مهم: استخدم axios العادي مش axiosInstance عشان الـ refresh
+      // نفسه ميدخلش في نفس الـ interceptor
+      const response = await axios.post(
+        `${API_URL}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      );
+
+      const newAccessToken = response.data.accessToken;
+
+      if (!newAccessToken) {
+        throw new Error("Refresh response does not contain accessToken");
+      }
+
+      store.dispatch(setAccessToken(newAccessToken));
+      localStorage.setItem("accessToken", newAccessToken);
+
+      isRefreshing = false;
+      onRefreshed(newAccessToken);
+
+      originalRequest.headers = {
+        ...originalRequest.headers,
+        Authorization: `Bearer ${newAccessToken}`,
+      };
+
+      return axiosInstance(originalRequest);
+    } catch (refreshError) {
+      console.error(
+        "Refresh token failed:",
+        refreshError.response?.data || refreshError.message
+      );
+
+      isRefreshing = false;
+      onRefreshFailed();
+
+      // لوج اويت محلي بس - من غير ما نبعت request تاني للسيرفر
+      forceLocalLogout();
+
+      return Promise.reject(refreshError);
+    }
   }
 );
 
