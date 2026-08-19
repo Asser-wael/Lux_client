@@ -1,6 +1,6 @@
 import axios from "axios";
 import { store } from "../app/store";
-import { setAccessToken, logout } from "../features/auth/authSlice";
+import { setAccessToken, logout, logoutUser } from "../features/auth/authSlice";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
