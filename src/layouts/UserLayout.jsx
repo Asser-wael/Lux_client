@@ -388,7 +388,25 @@ function Navbar() {
                     Account
                   </Link>
                 </motion.div>
-
+                {user && (
+                  <div className="px-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await dispatch(logoutUser()).unwrap();
+                          window.location.reload();
+                          navigate("/");
+                        } catch (error) {
+                          console.log(error);
+                        }
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-500 transition hover:bg-red-500/10"
+                    >
+                      <MdLogout className="text-lg" />
+                      {open && <span>Logout</span>}
+                    </button>
+                  </div>
+                )}
                 {user?.role === "admin" && (
                   <motion.div custom={NAV_LINKS.length + 3} initial="hidden" animate="visible" variants={diagonalFadeIn}>
                     <Link
