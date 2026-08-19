@@ -34,6 +34,7 @@ const Notifications = lazy(() => import("../pages/Notifications.jsx"));
 // =========================
 const Checkout = lazy(() => import("../pages/Checkout"));
 const Orders = lazy(() => import("../pages/Orders"));
+const Account = lazy(() => import("../pages/Account"));
 
 // =========================
 // Admin Pages
@@ -139,6 +140,7 @@ export const router = createBrowserRouter([
         path: "verify-otp",
         element: Loadable(VerifyOtp),
       },
+
       
       // Notifications
       {
@@ -161,6 +163,10 @@ export const router = createBrowserRouter([
           {
             path: "orders",
             element: Loadable(Orders),
+          },
+          {
+            path: "profile",
+            element: Loadable(Account),
           },
         ],
       },
