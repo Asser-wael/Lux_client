@@ -57,11 +57,17 @@ export const getProductDetails = createAsyncThunk(
 // Add / Update review
 export const addReview = createAsyncThunk(
   "product/addReview",
-  async ({ productId, rating, comment }, { rejectWithValue }) => {
+  async (
+    { productId, rating, comment },
+    { rejectWithValue }
+  ) => {
     try {
       const { data } = await axiosInstance.post(
         `/products/product/${productId}/reviews`,
-        { rating, comment }
+        {
+          rating,
+          comment,
+        }
       );
 
       showToast({
@@ -72,7 +78,8 @@ export const addReview = createAsyncThunk(
       return data.product;
     } catch (error) {
       const message =
-        error.response?.data?.message || "Failed to add review";
+        error.response?.data?.message ||
+        "Failed to add review";
 
       showToast({
         message,
@@ -83,7 +90,6 @@ export const addReview = createAsyncThunk(
     }
   }
 );
-
 // Add product
 export const addProduct = createAsyncThunk(
   "product/addProduct",
