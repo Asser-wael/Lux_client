@@ -392,7 +392,7 @@ function Navbar() {
                   </Link>
                 </motion.div>
                 {user && (
-                  <div className="px-3">
+                  <div className="mt-auto border-t border-[var(--border)] p-4">
                     <button
                       onClick={async () => {
                         try {
@@ -403,10 +403,49 @@ function Navbar() {
                           console.error("Logout failed:", error);
                         }
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-500 transition hover:bg-red-500/10"
+                      className="
+        group flex w-full items-center gap-3
+        rounded-2xl border border-red-500/10
+        bg-red-500/[0.04]
+        px-4 py-3
+        text-sm font-medium text-red-500
+        transition-all duration-300
+        hover:border-red-500/20
+        hover:bg-red-500/10
+        hover:shadow-[0_8px_25px_rgba(239,68,68,0.08)]
+      "
                     >
-                      <FiLogOut className="text-lg" />
-                      <span>Logout</span>
+                      <span
+                        className="
+          flex h-9 w-9 items-center justify-center
+          rounded-xl
+          bg-red-500/10
+          transition-all duration-300
+          group-hover:bg-red-500
+          group-hover:text-white
+          group-hover:scale-105
+        "
+                      >
+                        <FiLogOut className="text-lg transition-transform duration-300 group-hover:-translate-x-0.5" />
+                      </span>
+
+                      <span className="flex-1 text-left">
+                        <span className="block text-[13px] font-semibold">
+                          Logout
+                        </span>
+                        <span className="mt-0.5 block text-[10px] text-[var(--muted)]">
+                          Sign out of your account
+                        </span>
+                      </span>
+
+                      <FiChevronDown
+                        className="
+          -rotate-90 text-sm text-[var(--muted)]
+          transition-all duration-300
+          group-hover:translate-x-1
+          group-hover:text-red-500
+        "
+                      />
                     </button>
                   </div>
                 )}
