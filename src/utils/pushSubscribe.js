@@ -1,5 +1,6 @@
 import axiosInstance from "../api/axiosInstance";
 import { store } from "../app/store";
+import { showToast } from "./showToast";
 
 export async function subscribeToPush() {
   try {
@@ -25,6 +26,8 @@ export async function subscribeToPush() {
     const res = await axiosInstance.post("/notifications/subscribe", {
       subscription,
     });
+
+    showToast(res)
 
 
   } catch (err) {
