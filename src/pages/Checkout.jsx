@@ -75,6 +75,7 @@ export default function Checkout() {
   const BuyNowitem = useSelector(
     (state) => state.cart.BuyNowitem
   );
+console.log(BuyNowitem);
 
   /* ---------------- Form ---------------- */
 

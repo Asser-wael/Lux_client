@@ -798,7 +798,14 @@ export default function ProductDetails() {
             type="button"
             disabled={isOutOfStock}
             onClick={() => {
-              dispatch(BuyNowitem(currentProduct))
+              dispatch(BuyNowitem({
+                name: currentProduct.name,
+                image: currentProduct.image,
+                color: color,
+                size: selectedSize,
+                price: finalPrice,
+                quantity: quantity,
+              }))
               navigate("/checkout")
             }
             }
