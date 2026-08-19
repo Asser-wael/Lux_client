@@ -139,12 +139,12 @@ export default function Categories() {
                     transition={{ duration: 0.2 }}
                     className="card group overflow-hidden"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden">
+                    <div className="relative aspect-[5/4] overflow-hidden h-fit w-fit">
                       <img
                         src={cat.image || PLACEHOLDER}
                         alt={cat.name}
                         onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="h-full w-full object-cover transition-transform duration-500 "
                       />
                     </div>
                     <div className="p-4">
