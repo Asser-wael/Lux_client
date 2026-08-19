@@ -28,7 +28,6 @@ export async function subscribeToPush() {
     });
 
     showToast({ type: res.data.success, message: res.data.message })
-    console.log(res);
 
 
   } catch (err) {

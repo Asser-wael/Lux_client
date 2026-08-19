@@ -54,28 +54,26 @@ const getItemPrice = (item) => {
    Field
 ========================================================= */
 
-function Field({ icon, error, className = "", ...props }) {
-  return (
-    <div>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">
-          {icon}
-        </span>
-        <input
-          {...props}
-          className={`w-full rounded-xl border bg-card px-4 py-3 pl-11 text-sm text-text placeholder:text-muted transition-colors focus:outline-none focus:ring-1 ${
-            error
-              ? "border-red-400 focus:border-red-400 focus:ring-red-400"
-              : "border-border focus:border-primary focus:ring-primary"
-          } ${className}`}
-        />
-      </div>
-      {error && (
-        <p className="mt-1.5 text-xs text-red-500">{error.message}</p>
-      )}
+const Field = React.forwardRef(({ icon, error, className = "", ...props }, ref) => (
+  <div>
+    <div className="relative">
+      <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted">
+        {icon}
+      </span>
+      <input
+        ref={ref}
+        {...props}
+        className={`w-full rounded-xl border bg-card px-4 py-3 pl-11 text-sm text-text placeholder:text-muted transition-colors focus:outline-none focus:ring-1 ${
+          error
+            ? "border-red-400 focus:border-red-400 focus:ring-red-400"
+            : "border-border focus:border-primary focus:ring-primary"
+        } ${className}`}
+      />
     </div>
-  );
-}
+    {error && <p className="mt-1.5 text-xs text-red-500">{error.message}</p>}
+  </div>
+));
+Field.displayName = "Field";
 
 /* =========================================================
    Payment Option
@@ -122,6 +120,7 @@ export default function Checkout() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     mode: "onTouched",
@@ -167,6 +166,15 @@ export default function Checkout() {
       if (preview) URL.revokeObjectURL(preview);
     };
   }, [preview]);
+
+  /* ---------------- Payment method switch ---------------- */
+
+  const choosePayment = (method) => {
+    setValue("paymentMethod", method, { shouldValidate: true });
+    if (method === "cash") {
+      setImageError("");
+    }
+  };
 
   /* ---------------- Image upload ---------------- */
 
@@ -290,11 +298,7 @@ export default function Checkout() {
 
   return (
     <div dir="ltr" className="min-h-screen bg-bg px-4 py-10 md:px-10 lg:px-20">
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-10"
-      >
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
         <span className="text-sm uppercase tracking-[0.2em] text-primary">Checkout</span>
         <h1 className="text-4xl text-text md:text-5xl">Complete Your Order</h1>
         <p className="mt-2 text-muted">
@@ -302,22 +306,29 @@ export default function Checkout() {
         </p>
       </motion.div>
 
-      {submitError && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-600"
-        >
-          <span className="flex items-center gap-2">
-            <FiAlertCircle /> {submitError}
-          </span>
-          <button type="button" onClick={() => setSubmitError("")} aria-label="Dismiss">
-            <FiX />
-          </button>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {submitError && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-600"
+          >
+            <span className="flex items-center gap-2">
+              <FiAlertCircle /> {submitError}
+            </span>
+            <button type="button" onClick={() => setSubmitError("")} aria-label="Dismiss">
+              <FiX />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr]">
+        {/* ===================================================
+            FORM
+        =================================================== */}
+
         <motion.form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
@@ -326,7 +337,7 @@ export default function Checkout() {
           transition={{ delay: 0.1 }}
           className="flex flex-col gap-6"
         >
-          {/* Shipping */}
+          {/* Shipping Address */}
           <div className="card p-6 md:p-8">
             <div className="mb-6 flex items-center gap-2">
               <FiMapPin className="text-primary" />
@@ -365,13 +376,14 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* Payment */}
+          {/* Payment Method */}
           <div className="card p-6 md:p-8">
             <div className="mb-6 flex items-center gap-2">
               <FiCreditCard className="text-primary" />
               <h3 className="text-2xl text-text">Payment Method</h3>
             </div>
 
+            {/* keeps paymentMethod in the form's data without a visible input */}
             <input type="hidden" {...register("paymentMethod")} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -379,11 +391,83 @@ export default function Checkout() {
                 active={paymentMethod === "cash"}
                 icon={<FiDollarSign />}
                 title="Cash on Delivery"
-                onClick={() =>
-                  document.querySelector('input[name="paymentMethod"]') // fallback not needed
-                }
+                onClick={() => choosePayment("cash")}
+              />
+              <PaymentOption
+                active={isWallet}
+                icon={<FiCreditCard />}
+                title="E-Wallet"
+                onClick={() => choosePayment("wallet")}
               />
             </div>
+
+            <AnimatePresence initial={false}>
+              {isWallet && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-6 grid grid-cols-1 gap-4 border-t border-border pt-6 md:grid-cols-2">
+                    <Field
+                      icon={<FiUser />}
+                      placeholder="Sender Name"
+                      error={errors.senderName}
+                      {...register("senderName", {
+                        required: isWallet ? "Sender name is required" : false,
+                      })}
+                    />
+                    <Field
+                      icon={<FiPhone />}
+                      type="tel"
+                      placeholder="Sender Phone Number"
+                      error={errors.senderPhone}
+                      {...register("senderPhone", {
+                        required: isWallet ? "Sender phone is required" : false,
+                      })}
+                    />
+                    <Field
+                      icon={<FiCreditCard />}
+                      placeholder="Transaction ID"
+                      className="md:col-span-2"
+                      error={errors.transactionId}
+                      {...register("transactionId", {
+                        required: isWallet ? "Transaction ID is required" : false,
+                      })}
+                    />
+
+                    <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card px-4 py-6 text-center transition hover:border-primary md:col-span-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImage}
+                      />
+
+                      {preview ? (
+                        <img
+                          src={preview}
+                          alt="Transfer Receipt"
+                          className="max-h-64 rounded-lg object-contain"
+                        />
+                      ) : (
+                        <>
+                          <FiUpload className="text-2xl text-primary" />
+                          <span className="text-sm text-muted">
+                            Upload transfer receipt image
+                          </span>
+                        </>
+                      )}
+                    </label>
+                    {imageError && (
+                      <p className="-mt-2 text-xs text-red-500 md:col-span-2">{imageError}</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <motion.button
@@ -405,6 +489,59 @@ export default function Checkout() {
             {checkoutLoading ? "Processing Order..." : "Place Order"}
           </motion.button>
         </motion.form>
+
+        {/* ===================================================
+            ORDER SUMMARY
+        =================================================== */}
+
+        <motion.aside
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card sticky top-6 h-fit p-6 md:p-8"
+        >
+          <div className="mb-6 flex items-center gap-2">
+            <FiShoppingBag className="text-primary" />
+            <h3 className="text-2xl text-text">Order Summary</h3>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            {checkoutItems.map((item, i) => (
+              <motion.div
+                key={`${item.product?._id || item.product}-${item.color}-${item.size}-${i}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * i }}
+                className="flex items-center gap-3 border-b border-border pb-4 last:border-0 last:pb-0"
+              >
+                <img
+                  src={item.product?.image || item.image}
+                  alt={item.product?.name || item.name}
+                  className="h-16 w-16 rounded-lg object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm text-text">
+                    {item.product?.name || item.name}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {item.color && `${item.color} · `}
+                    {item.size && `${item.size} · `}× {item.quantity || 1}
+                  </p>
+                </div>
+                <span className="whitespace-nowrap text-sm text-primary">
+                  EGP {(getItemPrice(item) * Number(item.quantity || 1)).toLocaleString()}
+                </span>
+              </motion.div>
+            ))}
+
+            <div className="mt-2 flex items-center justify-between border-t border-border pt-4 text-lg text-text">
+              <span>Total</span>
+              <span className="text-xl font-semibold text-primary">
+                EGP {total.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </motion.aside>
       </div>
     </div>
   );
