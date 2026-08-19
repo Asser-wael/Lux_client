@@ -1,53 +1,126 @@
 import axios from "axios";
 import { store } from "../app/store";
-import { setAccessToken, logoutUser } from "../features/auth/authSlice";
+import { setAccessToken, logout } from "../features/auth/authSlice";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,
   withCredentials: true,
 });
 
-// Request Interceptor
-axiosInstance.interceptors.request.use((config) => {
-  const token = store.getState().auth.accessToken;
+/* =========================================================
+   REQUEST INTERCEPTOR
+========================================================= */
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = store.getState().auth.accessToken;
 
-  return config;
-});
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
-// Response Interceptor
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+/* =========================================================
+   RESPONSE INTERCEPTOR
+========================================================= */
+
 axiosInstance.interceptors.response.use(
   (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
 
+    /*
+     * No response = network/CORS/etc.
+     */
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
+    /*
+     * Only refresh when:
+     *
+     * 401
+     * TOKEN_EXPIRED
+     * request wasn't retried before
+     */
     if (
-      error.response?.status === 401 &&
-      error.response?.data?.code === "TOKEN_EXPIRED" &&
-      !originalRequest._retry
+      error.response.status === 401 &&
+      error.response.data?.code === "TOKEN_EXPIRED" &&
+      !originalRequest?._retry
     ) {
       originalRequest._retry = true;
 
       try {
-        // Use bare axios to prevent infinite interceptor loops
-        const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+        /*
+         * IMPORTANT:
+         * Use plain axios here, NOT axiosInstance.
+         *
+         * This prevents the refresh request itself
+         * from entering this interceptor.
+         */
+        const response = await axios.post(
+          `${API_URL}/auth/refresh`,
           {},
-          { withCredentials: true }
+          {
+            withCredentials: true,
+          }
         );
 
-        store.dispatch(setAccessToken(data.accessToken));
+        const newAccessToken =
+          response.data.accessToken;
 
-        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        if (!newAccessToken) {
+          throw new Error(
+            "Refresh response does not contain accessToken"
+          );
+        }
 
+        /*
+         * Save new access token
+         */
+        store.dispatch(
+          setAccessToken(newAccessToken)
+        );
+
+        /*
+         * Update original request
+         */
+        originalRequest.headers = {
+          ...originalRequest.headers,
+          Authorization: `Bearer ${newAccessToken}`,
+        };
+
+        /*
+         * Retry original request
+         */
         return axiosInstance(originalRequest);
+
       } catch (refreshError) {
+
+        console.error(
+          "Refresh token failed:",
+          refreshError.response?.data ||
+            refreshError.message
+        );
+
+
         store.dispatch(logoutUser());
-        window.location.href = "/login";
+
+        /*
+         * Redirect only once
+         */
+        if (
+          window.location.pathname !== "/login"
+        ) {
+          window.location.replace("/login");
+        }
 
         return Promise.reject(refreshError);
       }
