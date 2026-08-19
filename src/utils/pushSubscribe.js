@@ -27,7 +27,8 @@ export async function subscribeToPush() {
       subscription,
     });
 
-    showToast({type:res.type,message:res.message})
+    showToast({ type: res.type, message: res.message })
+    console.log(res);
 
 
   } catch (err) {
