@@ -31,7 +31,12 @@ export default function Notifications() {
   useEffect(() => {
     dispatch(fetchUserNotifications());
   }, [dispatch]);
-
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
   // Unread count
   const unreadCount = notifications.filter(
     (item) => !item.isRead
@@ -146,10 +151,9 @@ export default function Notifications() {
                   transition
                   hover:border-[var(--primary)]
                   cursor-pointer
-                  ${
-                    !notification.isRead
-                      ? "shadow-sm"
-                      : "opacity-70"
+                  ${!notification.isRead
+                    ? "shadow-sm"
+                    : "opacity-70"
                   }
                 `}
               >
@@ -161,10 +165,9 @@ export default function Notifications() {
                     rounded-xl
                     flex items-center justify-center
                     text-lg
-                    ${
-                      notification.isRead
-                        ? "bg-[var(--bg)] text-[var(--muted)]"
-                        : "bg-[var(--primary)]/10 text-[var(--primary)]"
+                    ${notification.isRead
+                      ? "bg-[var(--bg)] text-[var(--muted)]"
+                      : "bg-[var(--primary)]/10 text-[var(--primary)]"
                     }
                   `}
                 >
