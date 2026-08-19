@@ -20,7 +20,7 @@ self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
 
   const options = {
-    body: data.body 
+    body: data.body ,
     icon: data.icon || "/image.png",
     badge: data.badge || "/image.png",
 
