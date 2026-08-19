@@ -13,6 +13,7 @@ import UserLayout from "../layouts/UserLayout";
 
 // Pages
 import Sale from "../pages/Sale.jsx";
+import AppError from "../components/common/AppError.jsx";
 
 // =========================
 // Public Pages
@@ -96,64 +97,67 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <UserLayout />,
+    errorElement: <AppError />,
+    
     children: [
       {
         index: true,
         element: Loadable(Home),
       },
-
+      
       {
         path: "products",
         element: Loadable(Products),
       },
-
+      
       {
         path: "products/:id",
         element: Loadable(ProductDetails),
       },
-
+      
       {
         path: "cart",
         element: Loadable(Cart),
       },
-
+      
       {
         path: "sale",
         element: <Sale />,
       },
-
+      
       {
         path: "collections",
         element: Loadable(Collections),
       },
-
+      
       {
         path: "collections/:id",
         element: Loadable(CategoryDetails),
       },
-
+      
       {
         path: "verify-otp",
         element: Loadable(VerifyOtp),
       },
-
+      
       // Notifications
       {
         path: "notifications",
         element: Loadable(Notifications),
       },
-
+      
       // =========================
       // Protected User Routes
       // =========================
       {
         element: <PrivateRoute />,
+        errorElement: <AppError />,
         children: [
           {
             path: "checkout",
             element: Loadable(Checkout),
           },
-
+          
           {
             path: "orders",
             element: Loadable(Orders),
@@ -162,13 +166,14 @@ export const router = createBrowserRouter([
       },
     ],
   },
-
+  
   // =========================
   // Admin
   // =========================
   {
     path: "/admin",
     element: <AdminRoute />,
+    errorElement: <AppError />,
     children: [
       {
         element: <AdminLayout />,

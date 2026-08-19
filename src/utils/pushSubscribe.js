@@ -27,7 +27,6 @@ export async function subscribeToPush() {
       subscription,
     });
 
-    showToast({ type: res.data.success, message: res.data.message })
 
 
   } catch (err) {
