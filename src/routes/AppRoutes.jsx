@@ -99,55 +99,49 @@ export const router = createBrowserRouter([
     path: "/",
     element: <UserLayout />,
     errorElement: <AppError />,
-    
+
     children: [
       {
         index: true,
         element: Loadable(Home),
       },
-      
+
       {
         path: "products",
         element: Loadable(Products),
       },
-      
+
       {
         path: "products/:id",
         element: Loadable(ProductDetails),
       },
-      
-      {
-        path: "cart",
-        element: Loadable(Cart),
-      },
-      
+
+
+
       {
         path: "sale",
         element: <Sale />,
       },
-      
+
       {
         path: "collections",
         element: Loadable(Collections),
       },
-      
+
       {
         path: "collections/:id",
         element: Loadable(CategoryDetails),
       },
-      
+
       {
         path: "verify-otp",
         element: Loadable(VerifyOtp),
       },
 
-      
+
       // Notifications
-      {
-        path: "notifications",
-        element: Loadable(Notifications),
-      },
-      
+
+
       // =========================
       // Protected User Routes
       // =========================
@@ -156,10 +150,18 @@ export const router = createBrowserRouter([
         errorElement: <AppError />,
         children: [
           {
+            path: "cart",
+            element: Loadable(Cart),
+          },
+          {
+            path: "notifications",
+            element: Loadable(Notifications),
+          },
+          {
             path: "checkout",
             element: Loadable(Checkout),
           },
-          
+
           {
             path: "orders",
             element: Loadable(Orders),
@@ -172,7 +174,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  
+
   // =========================
   // Admin
   // =========================
