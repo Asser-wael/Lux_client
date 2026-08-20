@@ -53,9 +53,8 @@ const PeriodFilter = ({ current, onChange }) => (
       <button
         key={p}
         onClick={() => onChange(p)}
-        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
-          current === p ? "bg-primary text-white" : "text-muted hover:text-text"
-        }`}
+        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${current === p ? "bg-primary text-white" : "text-muted hover:text-text"
+          }`}
       >
         {p}
       </button>
@@ -92,9 +91,8 @@ const StatCard = ({ icon, label, rawValue = 0, isCurrency = false, tone = "accen
         {displayValue}
       </p>
       <span
-        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
-          tone === "primary" ? "bg-primary" : "bg-accent"
-        }`}
+        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${tone === "primary" ? "bg-primary" : "bg-accent"
+          }`}
       />
     </motion.div>
   );
@@ -166,6 +164,9 @@ export default function Dashboard() {
     loading,
   } = useSelector((state) => state.dashboard);
 
+  const handleEdit = (product) => {
+    dispatch(setEditid(product._id));
+  };
   useEffect(() => {
     dispatch(fetchDashboardCards());
     dispatch(fetchLatestOrders());
@@ -415,7 +416,7 @@ export default function Dashboard() {
 
                   <div className="flex shrink-0 gap-2">
                     <button
-                      onClick={() => dispatch(setEditid(item.productId))}
+                      onClick={() => handleEdit(item)}
                       className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
                     >
                       Edit
