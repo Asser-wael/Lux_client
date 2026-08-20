@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
@@ -22,41 +22,90 @@ const fadeUp = {
 // ============================================================
 
 function TrustItem({ item, index }) {
+  const [img, setImg] = useState(null);
+
   return (
-    <motion.div
-      custom={index}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.4 }}
-      variants={fadeUp}
-      className="
-        group flex flex-col items-center gap-4
-        text-center px-4
-        sm:flex-row sm:text-left sm:gap-5
-      "
-    >
-      <div
+    <>
+      <motion.div
+        custom={index}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.4 }}
+        variants={fadeUp}
         className="
-          flex h-14 w-14 shrink-0 items-center justify-center
-          rounded-full border border-[var(--border)]
-          bg-[var(--bg)] overflow-hidden
-          transition-colors duration-300
-          group-hover:border-[var(--primary)]
+          group flex flex-col items-center gap-4
+          text-center px-4
+          sm:flex-row sm:text-left sm:gap-5
         "
       >
-        <img
-          src={item?.image}
-          alt={item?.title || "Trust badge"}
-          className="h-7 w-7 object-contain"
-        />
-      </div>
+        <button
+          type="button"
+          onClick={() => setImg(item?.image)}
+          className="
+            flex h-14 w-14 shrink-0 items-center justify-center
+            rounded-full border border-[var(--border)]
+            bg-[var(--bg)] overflow-hidden
+            transition-colors duration-300
+            group-hover:border-[var(--primary)]
+            cursor-zoom-in
+          "
+        >
+          <img
+            src={item?.image}
+            alt={item?.title || "Trust badge"}
+            className="h-7 w-7 object-contain"
+          />
+        </button>
 
-      <div>
-        <h3 className="font-serif text-sm sm:text-base font-medium text-[var(--text)] leading-snug">
-          {item?.title}
-        </h3>
-      </div>
-    </motion.div>
+        <div>
+          <h3 className="font-serif text-sm sm:text-base font-medium text-[var(--text)] leading-snug">
+            {item?.title}
+          </h3>
+        </div>
+      </motion.div>
+
+      {/* Image Preview */}
+      {img && (
+        <div
+          onClick={() => setImg(null)}
+          className="
+            fixed inset-0 z-[9999]
+            flex items-center justify-center
+            bg-black/80 backdrop-blur-sm
+            p-4 cursor-zoom-out
+          "
+        >
+          <img
+            src={img}
+            alt={item?.title || "Trust badge"}
+            onClick={(e) => e.stopPropagation()}
+            className="
+              max-h-[90vh]
+              max-w-[90vw]
+              object-contain
+              rounded-2xl
+              shadow-2xl
+            "
+          />
+
+          <button
+            type="button"
+            onClick={() => setImg(null)}
+            className="
+              absolute top-5 right-5
+              flex h-10 w-10 items-center justify-center
+              rounded-full
+              bg-white/10 text-white
+              text-2xl
+              hover:bg-white/20
+              transition
+            "
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -99,6 +148,7 @@ export default function TrustSection() {
 
   return (
     <section className="border-y border-[var(--border)] bg-[var(--bg)]">
+
       <div className="max-w-[1450px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-14">
         {loading ? (
           <TrustSkeleton />
