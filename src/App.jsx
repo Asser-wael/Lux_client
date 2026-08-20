@@ -15,7 +15,7 @@ import { addOrder } from "./features/order/orderSlice.js";
 
 function App() {
   const { user, accessToken } = useSelector((state) => state.auth);
-  const { orders } = useSelector((state) => state.order); 
+  const { orders } = useSelector((state) => state.orders); 
   const dispatch = useDispatch();
   const socket = useSocket();
 
