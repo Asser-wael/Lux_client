@@ -38,35 +38,95 @@ function TrustItem({ item, index }) {
           sm:flex-row sm:text-left sm:gap-5
         "
       >
-        <button
+        {/* Animated Icon */}
+        <motion.button
           type="button"
           onClick={() => setImg(item?.image)}
+          whileHover={{
+            scale: 1.08,
+            rotate: 3,
+          }}
+          whileTap={{
+            scale: 0.94,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 15,
+          }}
           className="
-            flex h-14 w-14 shrink-0 items-center justify-center
-            rounded-full border border-[var(--border)]
-            bg-[var(--bg)] overflow-hidden
+            relative flex h-14 w-14 shrink-0
+            items-center justify-center
+            rounded-full
+            border border-[var(--border)]
+            bg-[var(--bg)]
+            overflow-hidden
+            cursor-zoom-in
             transition-colors duration-300
             group-hover:border-[var(--primary)]
-            cursor-zoom-in
           "
         >
-          <img
+          {/* Glow */}
+          <motion.span
+            className="
+              absolute inset-0 rounded-full
+              bg-[var(--primary)]
+              opacity-0
+              blur-xl
+            "
+            whileHover={{
+              opacity: 0.15,
+              scale: 1.3,
+            }}
+            transition={{ duration: 0.3 }}
+          />
+
+          {/* Icon */}
+          <motion.img
             src={item?.image}
             alt={item?.title || "Trust badge"}
-            className="h-7 w-7 object-contain"
+            className="relative z-10 h-7 w-7 object-contain"
+            whileHover={{
+              scale: 1.15,
+              rotate: -3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 12,
+            }}
           />
-        </button>
+        </motion.button>
 
-        <div>
-          <h3 className="font-serif text-sm sm:text-base font-medium text-[var(--text)] leading-snug">
+        {/* Content */}
+        <motion.div
+          whileHover={{ x: 3 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 20,
+          }}
+        >
+          <h3 className="
+            font-serif
+            text-sm sm:text-base
+            font-medium
+            text-[var(--text)]
+            leading-snug
+            transition-colors duration-300
+            group-hover:text-[var(--primary)]
+          ">
             {item?.title}
           </h3>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Image Preview */}
       {img && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           onClick={() => setImg(null)}
           className="
             fixed inset-0 z-[9999]
@@ -75,7 +135,14 @@ function TrustItem({ item, index }) {
             p-4 cursor-zoom-out
           "
         >
-          <img
+          <motion.img
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 250,
+              damping: 20,
+            }}
             src={img}
             alt={item?.title || "Trust badge"}
             onClick={(e) => e.stopPropagation()}
@@ -88,27 +155,33 @@ function TrustItem({ item, index }) {
             "
           />
 
-          <button
+          <motion.button
             type="button"
             onClick={() => setImg(null)}
+            whileHover={{
+              scale: 1.1,
+              rotate: 90,
+            }}
+            whileTap={{ scale: 0.9 }}
             className="
               absolute top-5 right-5
-              flex h-10 w-10 items-center justify-center
+              flex h-10 w-10
+              items-center justify-center
               rounded-full
-              bg-white/10 text-white
+              bg-white/10
+              text-white
               text-2xl
               hover:bg-white/20
               transition
             "
           >
             ×
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </>
   );
 }
-
 // ============================================================
 // SKELETON
 // ============================================================
@@ -148,14 +221,33 @@ export default function TrustSection() {
 
   return (
     <section className="border-y border-[var(--border)] bg-[var(--bg)]">
-
       <div className="max-w-[1450px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-14">
+
+        {/* Title */}
+        <div className="text-center mb-10 sm:mb-12">
+          <span className="block mb-2 text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--primary)]">
+            Why Choose Us
+          </span>
+
+          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-semibold text-[var(--text)]">
+            A Shopping Experience You Can Trust
+          </h2>
+
+          <p className="mt-3 max-w-2xl mx-auto text-sm sm:text-base text-[var(--muted)]">
+            Everything you need for a seamless, secure, and premium shopping experience.
+          </p>
+        </div>
+
         {loading ? (
           <TrustSkeleton />
         ) : (
           <div className="grid grid-cols-2 gap-y-10 gap-x-4 lg:grid-cols-4 lg:gap-8">
             {trustItems.map((item, index) => (
-              <TrustItem key={item?._id || index} item={item} index={index} />
+              <TrustItem
+                key={item?._id || index}
+                item={item}
+                index={index}
+              />
             ))}
           </div>
         )}
