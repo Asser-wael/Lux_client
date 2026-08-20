@@ -15,6 +15,7 @@ import { addOrder } from "./features/order/orderSlice.js";
 
 function App() {
   const { user, accessToken } = useSelector((state) => state.auth);
+  const { orders } = useSelector((state) => state.order); 
   const dispatch = useDispatch();
   const socket = useSocket();
 
@@ -23,11 +24,14 @@ function App() {
       dispatch(getUser());
     }
   }, [accessToken, dispatch]);
+
   useEffect(() => {
-    if (socket && localStorage.getItem("userOrder")) {
-      socket.emit("userOrder", localStorage.getItem("userOrder"));
+    if (socket && user && orders?.length > 0) {
+      orders.forEach((order) => {
+        socket.emit("userOrder", order._id);
+      });
     }
-  }, [socket]);
+  }, [socket, user, orders]);
 
   useEffect(() => {
     if (!socket) return;
@@ -40,11 +44,7 @@ function App() {
         message: `New order received from ${order.shippingAddress.fullName}`,
       });
 
-      socket.emit("userOrder", order._id);
-
-      localStorage.setItem("userOrder", `userOrder-${order._id}`)
-
-      dispatch(addOrder(order))
+      dispatch(addOrder(order));
     };
 
     const handleWarning = (data) => {
@@ -61,7 +61,7 @@ function App() {
 
       showToast({
         type: "orderStatus",
-        message: `Order status updated to ${data.status}`,
+        message: data.body || `Order status updated to ${data.status}`,
       });
     };
 
@@ -74,7 +74,7 @@ function App() {
       socket.off("warning", handleWarning);
       socket.off("orderStatus", handleOrderStatus);
     };
-  }, [socket]);
+  }, [socket, dispatch]);
 
   useEffect(() => {
     dispatch(getCart());

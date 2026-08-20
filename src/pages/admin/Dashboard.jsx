@@ -137,7 +137,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const socket = useSocket();
 
-  const [onlineUsers, setOnlineUsers] = useState(-1);
+  const [onlineUsers, setOnlineUsers] = useState(0);
 
   const { products, editid } = useSelector((state) => state.products);
 
