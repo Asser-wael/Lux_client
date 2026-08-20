@@ -215,6 +215,24 @@ export default function TrustSection() {
     dispatch(getTrustItems());
   }, [dispatch]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15, // الفارق الزمني بين ظهور العناصر
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: "easeOut" },
+    },
+  };
   if (!loading && (!trustItems || trustItems.length === 0)) {
     return null;
   }
@@ -224,19 +242,34 @@ export default function TrustSection() {
       <div className="max-w-[1450px] mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-14">
 
         {/* Title */}
-        <div className="text-center mb-10 sm:mb-12">
-          <span className="block mb-2 text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--primary)]">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }} // تعمل الحركة مرة واحدة عند الوصول إليها أثناء التمرير
+          className="text-center mb-10 sm:mb-12"
+        >
+          <motion.span
+            variants={itemVariants}
+            className="block mb-2 text-xs sm:text-sm uppercase tracking-[0.3em] text-[var(--primary)]"
+          >
             Why Choose Us
-          </span>
+          </motion.span>
 
-          <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-semibold text-[var(--text)]">
+          <motion.h2
+            variants={itemVariants}
+            className="font-serif text-2xl sm:text-3xl lg:text-4xl font-semibold text-[var(--text)]"
+          >
             A Shopping Experience You Can Trust
-          </h2>
+          </motion.h2>
 
-          <p className="mt-3 max-w-2xl mx-auto text-sm sm:text-base text-[var(--muted)]">
+          <motion.p
+            variants={itemVariants}
+            className="mt-3 max-w-2xl mx-auto text-sm sm:text-base text-[var(--muted)]"
+          >
             Everything you need for a seamless, secure, and premium shopping experience.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {loading ? (
           <TrustSkeleton />
