@@ -20,9 +20,9 @@ self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
 
   const options = {
-    body: data.body ,
-    icon: data.icon || "/image.png",
-    badge: data.badge || "/image.png",
+    body: data.body,
+    icon: "/image.png",
+    badge: "/image.png",
 
     // صورة كبيرة اختيارية
     image: data.image || undefined,
