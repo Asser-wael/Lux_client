@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   LineChart,
@@ -31,6 +31,8 @@ import {
 } from "../../features/dashboard/dashboardSlice";
 import { setEditid } from "../../features/products/productSlice";
 import EditProduct from "../../components/products/EditProduct";
+import useCountUp from "../../hooks/useCountUp";
+
 
 const gridVariants = {
   hidden: {},
@@ -66,30 +68,37 @@ const toneClasses = {
   primary: "bg-primary/10 text-primary",
 };
 
-const StatCard = ({ icon, label, value, tone = "accent" }) => (
-  <motion.div
-    variants={cardVariants}
-    className="group card relative overflow-hidden p-5 sm:p-6 transition-shadow duration-300 hover:shadow-lg"
-  >
-    <div className="flex items-center gap-3">
+// StatCard مع إضافة الـ CountUp
+const StatCard = ({ icon, label, rawValue = 0, isCurrency = false, tone = "accent" }) => {
+  const animatedValue = useCountUp(rawValue, 1200);
+  const displayValue = isCurrency ? currency(animatedValue) : animatedValue.toLocaleString("en-US");
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      className="group card relative overflow-hidden p-5 sm:p-6 transition-shadow duration-300 hover:shadow-lg"
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${toneClasses[tone]}`}
+        >
+          {icon}
+        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+          {label}
+        </span>
+      </div>
+      <p className="mt-4 truncate text-2xl font-semibold text-text sm:text-3xl">
+        {displayValue}
+      </p>
       <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${toneClasses[tone]}`}
-      >
-        {icon}
-      </span>
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-        {label}
-      </span>
-    </div>
-    <p className="mt-4 truncate text-2xl font-semibold text-text sm:text-3xl">{value}</p>
-    {/* signature: accent underline reveals on hover */}
-    <span
-      className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
-        tone === "primary" ? "bg-primary" : "bg-accent"
-      }`}
-    />
-  </motion.div>
-);
+        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
+          tone === "primary" ? "bg-primary" : "bg-accent"
+        }`}
+      />
+    </motion.div>
+  );
+};
 
 const StatCardSkeleton = () => (
   <div className="card animate-pulse p-5 sm:p-6">
@@ -128,7 +137,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const socket = useSocket();
 
-  const [onlineUsers, setOnlineUsers] = React.useState(0);
+  const [onlineUsers, setOnlineUsers] = useState(0);
 
   const { products, editid } = useSelector((state) => state.products);
 
@@ -209,9 +218,9 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* الكروت */}
+      {/* الكروت - تم تعديل التنسيق ليكون سطر واحد على الموبايل */}
       {cardsLoading ? (
-        <div className="grid grid-cols-2 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <StatCardSkeleton key={i} />
           ))}
@@ -221,36 +230,38 @@ export default function Dashboard() {
           variants={gridVariants}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5"
+          className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5"
         >
           <StatCard
             icon={<PiCurrencyDollarDuotone />}
             label="Total Revenue"
-            value={currency(cards?.totalRevenue)}
+            rawValue={cards?.totalRevenue}
+            isCurrency={true}
             tone="accent"
           />
           <StatCard
             icon={<PiChartLineUpDuotone />}
             label={profitMargin ? `Profit · ${profitMargin}%` : "Profit"}
-            value={currency(cards?.totalProfit)}
+            rawValue={cards?.totalProfit}
+            isCurrency={true}
             tone="primary"
           />
           <StatCard
             icon={<PiShoppingBagDuotone />}
             label="Total Orders"
-            value={cards?.totalOrders || 0}
+            rawValue={cards?.totalOrders}
             tone="accent"
           />
           <StatCard
             icon={<PiUsersDuotone />}
             label="Total Users"
-            value={cards?.totalUsers || 0}
+            rawValue={cards?.totalUsers}
             tone="primary"
           />
           <StatCard
             icon={<PiPackageDuotone />}
             label="Total Products"
-            value={cards?.totalProducts || 0}
+            rawValue={cards?.totalProducts}
             tone="accent"
           />
         </motion.div>
