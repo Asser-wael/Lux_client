@@ -33,7 +33,6 @@ import { setEditid } from "../../features/products/productSlice";
 import EditProduct from "../../components/products/EditProduct";
 import useCountUp from "../../hooks/useCountUp";
 
-
 const gridVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.06 } },
@@ -53,8 +52,9 @@ const PeriodFilter = ({ current, onChange }) => (
       <button
         key={p}
         onClick={() => onChange(p)}
-        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${current === p ? "bg-primary text-white" : "text-muted hover:text-text"
-          }`}
+        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
+          current === p ? "bg-primary text-white" : "text-muted hover:text-text"
+        }`}
       >
         {p}
       </button>
@@ -67,7 +67,6 @@ const toneClasses = {
   primary: "bg-primary/10 text-primary",
 };
 
-// StatCard مع إضافة الـ CountUp
 const StatCard = ({ icon, label, rawValue = 0, isCurrency = false, tone = "accent" }) => {
   const animatedValue = useCountUp(rawValue, 1200);
   const displayValue = isCurrency ? currency(animatedValue) : animatedValue.toLocaleString("en-US");
@@ -91,8 +90,9 @@ const StatCard = ({ icon, label, rawValue = 0, isCurrency = false, tone = "accen
         {displayValue}
       </p>
       <span
-        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${tone === "primary" ? "bg-primary" : "bg-accent"
-          }`}
+        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
+          tone === "primary" ? "bg-primary" : "bg-accent"
+        }`}
       />
     </motion.div>
   );
@@ -137,10 +137,13 @@ export default function Dashboard() {
 
   const [onlineUsers, setOnlineUsers] = useState(0);
 
-  const { products, editid } = useSelector((state) => state.products);
+  const { editid } = useSelector((state) => state.products);
 
+  // الانضمام لغرفة الأدمن واستقبال عدد المتصلين
   useEffect(() => {
     if (!socket) return;
+
+    socket.emit("admin"); // ضمان الانضمام لغرفة الأدمن عند فتح الـ Dashboard
 
     const handleOnlineUsers = (count) => {
       setOnlineUsers(count);
@@ -164,9 +167,12 @@ export default function Dashboard() {
     loading,
   } = useSelector((state) => state.dashboard);
 
-  const handleEdit = (product) => {
-    dispatch(setEditid(product._id));
+  // إرسال הـ ID الرئيسي للمنتج للتحرير (تجنباً للأخطاء)
+  const handleEdit = (item) => {
+    const targetProductId = item.productId || item.product?._id || item._id;
+    dispatch(setEditid(targetProductId));
   };
+
   useEffect(() => {
     dispatch(fetchDashboardCards());
     dispatch(fetchLatestOrders());
@@ -195,7 +201,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen space-y-8 bg-bg p-4 sm:space-y-10 sm:p-8 lg:p-10">
-      {/* هيدر + أونلاين يوزرز */}
+      {/* Header & Online Counter */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,7 +225,7 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* الكروت - تم تعديل التنسيق ليكون سطر واحد على الموبايل */}
+      {/* Stat Cards */}
       {cardsLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -268,7 +274,7 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* الشارتات */}
+      {/* Charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {loading && !revenueChart?.length ? (
           <ChartSkeleton />
@@ -351,8 +357,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* الجداول */}
+      {/* Tables & Lists */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Latest Orders */}
         <div className="card p-4 sm:p-6">
           <h3 className="mb-5 text-lg text-text">Latest Orders</h3>
           <div>
@@ -362,7 +369,7 @@ export default function Dashboard() {
                 <RowSkeleton />
                 <RowSkeleton />
               </>
-            ) : latestOrders.length === 0 ? (
+            ) : !latestOrders || latestOrders.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted">No orders yet.</p>
             ) : (
               latestOrders.map((order) => (
@@ -390,6 +397,7 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Low Stock Products */}
         <div className="card p-4 sm:p-6">
           <h3 className="mb-5 text-lg text-text">Low Stock Products</h3>
           <div>
@@ -399,12 +407,12 @@ export default function Dashboard() {
                 <RowSkeleton />
                 <RowSkeleton />
               </>
-            ) : lowStock.length === 0 ? (
+            ) : !lowStock || lowStock.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted">All stock is healthy 👍</p>
             ) : (
               lowStock.map((item, i) => (
                 <div
-                  key={i}
+                  key={item._id || i}
                   className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0"
                 >
                   <div className="min-w-0">
