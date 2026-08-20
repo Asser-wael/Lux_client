@@ -29,7 +29,7 @@ import {
   setRevenuePeriod,
   setOrdersPeriod,
 } from "../../features/dashboard/dashboardSlice";
-import { setEditid } from "../../features/products/productSlice";
+import { getProducts, setEditid } from "../../features/products/productSlice";
 import EditProduct from "../../components/products/EditProduct";
 import useCountUp from "../../hooks/useCountUp";
 
@@ -135,7 +135,7 @@ export default function Dashboard() {
   const dispatch = useDispatch();
   const socket = useSocket();
 
-  const [onlineUsers, setOnlineUsers] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState(-1);
 
   const { editid } = useSelector((state) => state.products);
 
@@ -173,10 +173,12 @@ export default function Dashboard() {
     dispatch(setEditid(targetProductId));
   };
 
+  
   useEffect(() => {
     dispatch(fetchDashboardCards());
     dispatch(fetchLatestOrders());
     dispatch(fetchLowStockProducts());
+    dispatch(getProducts());
   }, [dispatch]);
 
   useEffect(() => {
