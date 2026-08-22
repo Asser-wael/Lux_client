@@ -1491,23 +1491,7 @@ export default function OrdersAdmin() {
   // ==========================================================
   // RENDER
   // ==========================================================
-if (selectedOrder) (
-      <OrderModal
-      order={selectedOrder}
-      onClose={() =>
-        setSelectedOrder(null)
-      }
-      onStatusChange={
-        handleStatusChange
-      }
-      updatingOrderId={
-        updatingOrderId
-      }
-      actionLoading={
-        actionLoading
-      }
-    />
-    )
+
   return (
     <div
       className="
@@ -1524,6 +1508,16 @@ if (selectedOrder) (
         max-sm:-translate-x-7
       "
     >
+
+      {selectedOrder && (
+        <OrderModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onStatusChange={handleStatusChange}
+          updatingOrderId={updatingOrderId}
+          actionLoading={actionLoading}
+        />
+      )}
       <div
         className="
           max-w-[1500px]
