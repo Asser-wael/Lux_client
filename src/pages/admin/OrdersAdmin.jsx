@@ -1068,14 +1068,14 @@ function OrderModal({
 
                 {order.walletPayment
                   ?.transferImage && (
-                  <a
-                    href={
-                      order.walletPayment
-                        .transferImage
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className="
+                    <a
+                      href={
+                        order.walletPayment
+                          .transferImage
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="
                       mt-4
                       inline-flex
                       items-center
@@ -1085,12 +1085,12 @@ function OrderModal({
                       text-[var(--primary)]
                       hover:underline
                     "
-                  >
-                    <FiExternalLink className="w-3.5 h-3.5" />
+                    >
+                      <FiExternalLink className="w-3.5 h-3.5" />
 
-                    View payment receipt
-                  </a>
-                )}
+                      View payment receipt
+                    </a>
+                  )}
               </section>
             )}
 
@@ -1428,8 +1428,8 @@ export default function OrdersAdmin() {
       (order) => {
         const orderCode = order._id
           ? order._id
-              .slice(-6)
-              .toUpperCase()
+            .slice(-6)
+            .toUpperCase()
           : "";
 
         const customerName =
@@ -1491,7 +1491,23 @@ export default function OrdersAdmin() {
   // ==========================================================
   // RENDER
   // ==========================================================
-
+if (selectedOrder) (
+      <OrderModal
+      order={selectedOrder}
+      onClose={() =>
+        setSelectedOrder(null)
+      }
+      onStatusChange={
+        handleStatusChange
+      }
+      updatingOrderId={
+        updatingOrderId
+      }
+      actionLoading={
+        actionLoading
+      }
+    />
+    )
   return (
     <div
       className="
@@ -1771,11 +1787,10 @@ export default function OrdersAdmin() {
                     whitespace-nowrap
                     transition
                     shrink-0
-                    ${
-                      selectedStatus ===
+                    ${selectedStatus ===
                       tab.id
-                        ? "bg-[var(--text)] text-[var(--bg)]"
-                        : "text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]"
+                      ? "bg-[var(--text)] text-[var(--bg)]"
+                      : "text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--bg)]"
                     }
                   `}
                 >
@@ -1813,22 +1828,22 @@ export default function OrdersAdmin() {
 
           {(searchQuery ||
             selectedStatus !== "all") && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedStatus("all");
-              }}
-              className="
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedStatus("all");
+                }}
+                className="
                 text-xs
                 text-[var(--muted)]
                 hover:text-[var(--text)]
                 transition
               "
-            >
-              Clear filters
-            </button>
-          )}
+              >
+                Clear filters
+              </button>
+            )}
         </div>
 
         {/* ==================================================
@@ -2135,29 +2150,7 @@ export default function OrdersAdmin() {
         </section>
       </div>
 
-      {/* =====================================================
-          MODAL
-      ===================================================== */}
-{
-  selectedOrder &&(
-    <OrderModal
-      order={selectedOrder}
-      onClose={() =>
-        setSelectedOrder(null)
-      }
-      onStatusChange={
-        handleStatusChange
-      }
-      updatingOrderId={
-        updatingOrderId
-      }
-      actionLoading={
-        actionLoading
-      }
-    />
 
-  )
-}
     </div>
   );
 }
