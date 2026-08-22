@@ -2138,22 +2138,26 @@ export default function OrdersAdmin() {
       {/* =====================================================
           MODAL
       ===================================================== */}
+{
+  selectedOrder &&(
+    <OrderModal
+      order={selectedOrder}
+      onClose={() =>
+        setSelectedOrder(null)
+      }
+      onStatusChange={
+        handleStatusChange
+      }
+      updatingOrderId={
+        updatingOrderId
+      }
+      actionLoading={
+        actionLoading
+      }
+    />
 
-      <OrderModal
-        order={selectedOrder}
-        onClose={() =>
-          setSelectedOrder(null)
-        }
-        onStatusChange={
-          handleStatusChange
-        }
-        updatingOrderId={
-          updatingOrderId
-        }
-        actionLoading={
-          actionLoading
-        }
-      />
+  )
+}
     </div>
   );
 }
