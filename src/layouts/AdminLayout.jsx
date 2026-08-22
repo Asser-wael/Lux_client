@@ -22,13 +22,6 @@ export default function AdminLayout() {
 
   const activeItem = menuItems.find((i) => i.to === location.pathname);
 
-
-  useEffect(() => {
-    console.log(accessToken);
-
-  }, [accessToken])
-
-
   return (
     <div className='flex min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] '>
       <motion.aside
