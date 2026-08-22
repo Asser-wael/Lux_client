@@ -1505,7 +1505,7 @@ export default function OrdersAdmin() {
         py-5
         sm:py-6
         lg:py-8
-        max-sm:-translate-x-10
+        max-sm:-translate-x-7
       "
     >
       <div
