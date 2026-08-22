@@ -752,12 +752,12 @@ function OrderModal({
   const isUpdating =
     updatingOrderId === order._id;
 
-  return (
+  return createPortal(
     <div
       className="
         fixed
         inset-0
-        z-50
+        z-[9999]
         bg-black/50
         flex
         items-center
