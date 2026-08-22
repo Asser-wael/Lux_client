@@ -1499,7 +1499,7 @@ export default function OrdersAdmin() {
         w-full
         bg-[var(--bg)]
         text-[var(--text)]
-        px-4
+        px-7
         sm:px-6
         lg:px-8
         py-5
