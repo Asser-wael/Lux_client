@@ -251,9 +251,7 @@ function App() {
 
     socket.emit("admin");
 
-    console.log(
-      "👑 Admin joined admin socket room"
-    );
+
   }, [
     socket,
     user?.role,
