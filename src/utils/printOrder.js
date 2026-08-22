@@ -1,18 +1,16 @@
 import qz from "qz-tray";
 import { connectQZ } from "./qzPrinter.js";
 
-/*
-  ضع هنا اسم الطابعة الحقيقي
-  بعد ما تعرفه من getPrinters()
-*/
-const PRINTER_NAME = "POS-80";
-
 /* =========================================================
    HELPERS
 ========================================================= */
 
 const safe = (value, fallback = "-") => {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     return fallback;
   }
 
@@ -33,12 +31,41 @@ export async function printOrder(order) {
     throw new Error("Invalid order");
   }
 
+  /* =======================================================
+     CONNECT QZ
+  ======================================================= */
+
   await connectQZ();
 
-  const config = qz.configs.create(PRINTER_NAME, {
-    encoding: "UTF-8",
-    jobName: `Order-${order._id.slice(-8)}`,
-  });
+  /* =======================================================
+     GET DEFAULT PRINTER
+  ======================================================= */
+
+  const printerName = await qz.printers.getDefault();
+
+  if (!printerName) {
+    throw new Error("No default printer found");
+  }
+
+  console.log(
+    "🖨️ Using printer:",
+    printerName
+  );
+
+  /* =======================================================
+     CREATE CONFIG
+  ======================================================= */
+
+  const config = qz.configs.create(
+    printerName,
+    {
+      encoding: "UTF-8",
+      jobName: `Order-${
+        order.orderCode ||
+        order._id.slice(-8)
+      }`,
+    }
+  );
 
   const data = [];
 
@@ -52,20 +79,16 @@ export async function printOrder(order) {
      HEADER
   ======================================================= */
 
-  // Center
   data.push("\x1B\x61\x01");
 
-  // Bold ON
   data.push("\x1B\x45\x01");
 
   data.push(line("NEW LEVEL"));
 
-  // Bold OFF
   data.push("\x1B\x45\x00");
 
   data.push(line("Order Receipt"));
 
-  // Left
   data.push("\x1B\x61\x00");
 
   data.push(separator());
@@ -76,9 +99,10 @@ export async function printOrder(order) {
 
   data.push(
     line(
-      `Order: ${safe(
+      `Order: ${
+        order.orderCode ||
         order._id?.slice(-8)?.toUpperCase()
-      )}`
+      }`
     )
   );
 
@@ -86,7 +110,9 @@ export async function printOrder(order) {
     line(
       `Date: ${
         order.createdAt
-          ? new Date(order.createdAt).toLocaleString("en-EG")
+          ? new Date(
+              order.createdAt
+            ).toLocaleString("en-EG")
           : "-"
       }`
     )
@@ -157,7 +183,10 @@ export async function printOrder(order) {
 
     data.push(
       line(
-        `Qty: ${safe(item.quantity, 0)}  Price: ${safe(
+        `Qty: ${safe(
+          item.quantity,
+          0
+        )}  Price: ${safe(
           item.price,
           0
         )} EGP`
@@ -177,7 +206,10 @@ export async function printOrder(order) {
 
   data.push(
     line(
-      `TOTAL: ${safe(order.totalPrice, 0)} EGP`
+      `TOTAL: ${safe(
+        order.totalPrice,
+        0
+      )} EGP`
     )
   );
 
@@ -193,7 +225,7 @@ export async function printOrder(order) {
     line(
       `Payment: ${
         order.paymentMethod === "cash"
-          ? "Cash"
+          ? "Cash on Delivery"
           : "Wallet"
       }`
     )
@@ -210,7 +242,8 @@ export async function printOrder(order) {
     data.push(
       line(
         `Sender: ${safe(
-          order.walletPayment.senderName
+          order.walletPayment
+            .senderName
         )}`
       )
     );
@@ -218,7 +251,8 @@ export async function printOrder(order) {
     data.push(
       line(
         `Sender Phone: ${safe(
-          order.walletPayment.senderPhone
+          order.walletPayment
+            .senderPhone
         )}`
       )
     );
@@ -226,7 +260,8 @@ export async function printOrder(order) {
     data.push(
       line(
         `Transaction: ${safe(
-          order.walletPayment.transactionId
+          order.walletPayment
+            .transactionId
         )}`
       )
     );
@@ -240,9 +275,15 @@ export async function printOrder(order) {
 
   data.push("\x1B\x61\x01");
 
-  data.push(line("Thank you for your order"));
+  data.push(
+    line(
+      "Thank you for your order"
+    )
+  );
 
-  data.push(line("NEW LEVEL"));
+  data.push(
+    line("NEW LEVEL")
+  );
 
   data.push("\n");
   data.push("\n");
@@ -268,7 +309,10 @@ export async function printOrder(order) {
   ]);
 
   console.log(
-    `🖨️ Order ${order._id} sent to ${PRINTER_NAME}`
+    `🖨️ Order ${
+      order.orderCode ||
+      order._id
+    } sent to ${printerName}`
   );
 
   return true;
