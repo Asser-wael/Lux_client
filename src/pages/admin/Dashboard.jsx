@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   LineChart,
@@ -17,8 +17,12 @@ import {
   PiShoppingBagDuotone,
   PiUsersDuotone,
   PiPackageDuotone,
-  PiChartLineUpDuotone,
+  PiArrowUpRight,
+  PiWarningCircle,
+  PiPencilSimple,
+  PiArrowRight,
 } from "react-icons/pi";
+
 import useSocket from "../../hooks/useSocket";
 import {
   fetchDashboardCards,
@@ -29,107 +33,232 @@ import {
   setRevenuePeriod,
   setOrdersPeriod,
 } from "../../features/dashboard/dashboardSlice";
-import { getProducts, setEditid } from "../../features/products/productSlice";
+
+import {
+  getProducts,
+  setEditid,
+} from "../../features/products/productSlice";
+
 import EditProduct from "../../components/products/EditProduct";
 import useCountUp from "../../hooks/useCountUp";
 
-const gridVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const PERIODS = ["weekly", "monthly", "yearly"];
+
+const currency = (value) =>
+  `${Number(value || 0).toLocaleString("en-US", {
+    maximumFractionDigits: 0,
+  })} EGP`;
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+const fadeUp = {
+  hidden: {
+    opacity: 0,
+    y: 8,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
+  },
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-};
+/* =========================================================
+   PERIOD SELECTOR
+========================================================= */
 
-const currency = (n) =>
-  `${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })} EGP`;
+function PeriodFilter({ current, onChange }) {
+  return (
+    <div className="flex items-center border-b border-border">
+      {PERIODS.map((period) => {
+        const active = current === period;
 
-const PeriodFilter = ({ current, onChange }) => (
-  <div className="flex items-center gap-1 rounded-full border border-border bg-bg p-1">
-    {["weekly", "monthly", "yearly"].map((p) => (
-      <button
-        key={p}
-        onClick={() => onChange(p)}
-        className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${
-          current === p ? "bg-primary text-white" : "text-muted hover:text-text"
-        }`}
-      >
-        {p}
-      </button>
-    ))}
-  </div>
-);
+        return (
+          <button
+            key={period}
+            type="button"
+            onClick={() => onChange(period)}
+            className={`
+              relative px-3 py-2 text-xs font-medium capitalize
+              transition-colors
+              ${
+                active
+                  ? "text-text"
+                  : "text-muted hover:text-text"
+              }
+            `}
+          >
+            {period}
 
-const toneClasses = {
-  accent: "bg-accent/10 text-accent",
-  primary: "bg-primary/10 text-primary",
-};
+            {active && (
+              <span className="absolute inset-x-2 -bottom-px h-px bg-text" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
-const StatCard = ({ icon, label, rawValue = 0, isCurrency = false, tone = "accent" }) => {
-  const animatedValue = useCountUp(rawValue, 1200);
-  const displayValue = isCurrency ? currency(animatedValue) : animatedValue.toLocaleString("en-US");
+/* =========================================================
+   STAT CARD
+========================================================= */
+
+function StatCard({
+  icon,
+  label,
+  value = 0,
+  isCurrency = false,
+  note,
+}) {
+  const animatedValue = useCountUp(value, 900);
+
+  const displayValue = isCurrency
+    ? currency(animatedValue)
+    : animatedValue.toLocaleString("en-US");
 
   return (
     <motion.div
-      variants={cardVariants}
-      className="group card relative overflow-hidden p-5 sm:p-6 transition-shadow duration-300 hover:shadow-lg"
+      variants={fadeUp}
+      className="
+        border border-border
+        bg-card
+        px-5 py-5
+        sm:px-6 sm:py-6
+      "
     >
-      <div className="flex items-center gap-3">
-        <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg ${toneClasses[tone]}`}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+            {label}
+          </p>
+
+          <p className="mt-3 text-[26px] font-semibold tracking-tight text-text sm:text-[30px]">
+            {displayValue}
+          </p>
+
+          {note && (
+            <p className="mt-1 text-xs text-muted">
+              {note}
+            </p>
+          )}
+        </div>
+
+        <div
+          className="
+            flex h-9 w-9 shrink-0
+            items-center justify-center
+            border border-border
+            bg-bg
+            text-[18px]
+            text-muted
+          "
         >
           {icon}
-        </span>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-          {label}
-        </span>
+        </div>
       </div>
-      <p className="mt-4 truncate text-2xl font-semibold text-text sm:text-3xl">
-        {displayValue}
-      </p>
-      <span
-        className={`absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100 ${
-          tone === "primary" ? "bg-primary" : "bg-accent"
-        }`}
-      />
     </motion.div>
   );
-};
+}
 
-const StatCardSkeleton = () => (
-  <div className="card animate-pulse p-5 sm:p-6">
-    <div className="flex items-center gap-3">
-      <span className="h-10 w-10 rounded-xl bg-border/60" />
-      <span className="h-3 w-20 rounded bg-border/60" />
-    </div>
-    <div className="mt-4 h-7 w-24 rounded bg-border/60" />
-  </div>
-);
+/* =========================================================
+   STAT SKELETON
+========================================================= */
 
-const ChartSkeleton = () => (
-  <div className="card p-6">
-    <div className="mb-6 flex items-center justify-between">
-      <div className="h-5 w-24 animate-pulse rounded bg-border/60" />
-      <div className="h-8 w-40 animate-pulse rounded-full bg-border/60" />
-    </div>
-    <div className="h-[260px] animate-pulse rounded-xl bg-border/40" />
-  </div>
-);
+function StatSkeleton() {
+  return (
+    <div className="border border-border bg-card px-5 py-5 sm:px-6 sm:py-6">
+      <div className="flex justify-between">
+        <div>
+          <div className="h-3 w-20 animate-pulse bg-border/60" />
 
-const RowSkeleton = () => (
-  <div className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0">
-    <div className="flex min-w-0 items-center gap-3">
-      <span className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-border/60" />
-      <div className="space-y-1.5">
-        <div className="h-3 w-24 animate-pulse rounded bg-border/60" />
-        <div className="h-2.5 w-14 animate-pulse rounded bg-border/50" />
+          <div className="mt-4 h-8 w-28 animate-pulse bg-border/60" />
+
+          <div className="mt-2 h-3 w-16 animate-pulse bg-border/40" />
+        </div>
+
+        <div className="h-9 w-9 animate-pulse bg-border/60" />
       </div>
     </div>
-    <div className="h-3 w-14 shrink-0 animate-pulse rounded bg-border/60" />
-  </div>
-);
+  );
+}
+
+/* =========================================================
+   CHART SKELETON
+========================================================= */
+
+function ChartSkeleton() {
+  return (
+    <div className="border border-border bg-card p-5 sm:p-6">
+      <div className="flex items-center justify-between">
+        <div className="h-5 w-24 animate-pulse bg-border/60" />
+
+        <div className="h-8 w-32 animate-pulse bg-border/50" />
+      </div>
+
+      <div className="mt-7 h-[260px] animate-pulse bg-bg" />
+    </div>
+  );
+}
+
+/* =========================================================
+   ROW SKELETON
+========================================================= */
+
+function RowSkeleton() {
+  return (
+    <div className="flex items-center justify-between border-b border-border py-4 last:border-0">
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 animate-pulse bg-border/60" />
+
+        <div>
+          <div className="h-3 w-24 animate-pulse bg-border/60" />
+          <div className="mt-2 h-2.5 w-16 animate-pulse bg-border/40" />
+        </div>
+      </div>
+
+      <div className="h-3 w-14 animate-pulse bg-border/60" />
+    </div>
+  );
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function Status({ status }) {
+  const styles = {
+    pending: "text-amber-600",
+    confirmed: "text-blue-600",
+    shipped: "text-purple-600",
+    delivered: "text-green-600",
+    cancelled: "text-red-600",
+  };
+
+  return (
+    <span
+      className={`text-xs capitalize ${
+        styles[status] || "text-muted"
+      }`}
+    >
+      {status || "pending"}
+    </span>
+  );
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
 
 export default function Dashboard() {
   const dispatch = useDispatch();
@@ -137,24 +266,9 @@ export default function Dashboard() {
 
   const [onlineUsers, setOnlineUsers] = useState(0);
 
-  const { editid } = useSelector((state) => state.products);
-
-  // الانضمام لغرفة الأدمن واستقبال عدد المتصلين
-  useEffect(() => {
-    if (!socket) return;
-
-    socket.emit("admin"); // ضمان الانضمام لغرفة الأدمن عند فتح الـ Dashboard
-
-    const handleOnlineUsers = (count) => {
-      setOnlineUsers(count);
-    };
-
-    socket.on("onlineUsers", handleOnlineUsers);
-
-    return () => {
-      socket.off("onlineUsers", handleOnlineUsers);
-    };
-  }, [socket]);
+  const { editid } = useSelector(
+    (state) => state.products
+  );
 
   const {
     cards,
@@ -167,13 +281,36 @@ export default function Dashboard() {
     loading,
   } = useSelector((state) => state.dashboard);
 
-  // إرسال הـ ID الرئيسي للمنتج للتحرير (تجنباً للأخطاء)
-  const handleEdit = (item) => {
-    const targetProductId = item.productId || item.product?._id || item._id;
-    dispatch(setEditid(targetProductId));
-  };
+  /* =======================================================
+     SOCKET
+  ======================================================= */
 
-  
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("admin");
+
+    const handleOnlineUsers = (count) => {
+      setOnlineUsers(Number(count || 0));
+    };
+
+    socket.on(
+      "onlineUsers",
+      handleOnlineUsers
+    );
+
+    return () => {
+      socket.off(
+        "onlineUsers",
+        handleOnlineUsers
+      );
+    };
+  }, [socket]);
+
+  /* =======================================================
+     INITIAL DATA
+  ======================================================= */
+
   useEffect(() => {
     dispatch(fetchDashboardCards());
     dispatch(fetchLatestOrders());
@@ -181,266 +318,641 @@ export default function Dashboard() {
     dispatch(getProducts());
   }, [dispatch]);
 
+  /* =======================================================
+     REVENUE
+  ======================================================= */
+
   useEffect(() => {
-    dispatch(fetchRevenueChart(revenuePeriod));
+    dispatch(
+      fetchRevenueChart(revenuePeriod)
+    );
   }, [dispatch, revenuePeriod]);
 
+  /* =======================================================
+     ORDERS
+  ======================================================= */
+
   useEffect(() => {
-    dispatch(fetchOrdersChart(ordersPeriod));
+    dispatch(
+      fetchOrdersChart(ordersPeriod)
+    );
   }, [dispatch, ordersPeriod]);
 
-  const cardsLoading = loading && !cards;
+  /* =======================================================
+     EDIT
+  ======================================================= */
+
+  const handleEdit = (item) => {
+    const productId =
+      item.productId ||
+      item.product?._id ||
+      item._id;
+
+    if (!productId) return;
+
+    dispatch(setEditid(productId));
+  };
+
+  /* =======================================================
+     PROFIT
+  ======================================================= */
 
   const profitMargin = useMemo(() => {
     if (!cards?.totalRevenue) return null;
-    const pct = ((cards.totalProfit || 0) / cards.totalRevenue) * 100;
-    return Number.isFinite(pct) ? pct.toFixed(1) : null;
+
+    const percentage =
+      ((cards.totalProfit || 0) /
+        cards.totalRevenue) *
+      100;
+
+    return Number.isFinite(percentage)
+      ? percentage.toFixed(1)
+      : null;
   }, [cards]);
+
+  /* =======================================================
+     EDIT PRODUCT
+  ======================================================= */
 
   if (editid) {
     return <EditProduct />;
   }
 
+  const cardsLoading = loading && !cards;
+
+  /* =======================================================
+     UI
+  ======================================================= */
+
   return (
-    <div className="min-h-screen space-y-8 bg-bg p-4 sm:space-y-10 sm:p-8 lg:p-10">
-      {/* Header & Online Counter */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent">
-            Overview
-          </p>
-          <h1 className="mt-1 text-2xl text-text sm:text-3xl">Dashboard</h1>
-          <p className="mt-1 text-sm text-muted">A snapshot of how your store is performing.</p>
-        </div>
+    <main className="min-h-screen bg-bg text-text">
 
-        <div className="flex items-center gap-2 self-start rounded-full border border-border bg-card px-4 py-2 sm:self-auto">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-          </span>
-          <span className="text-sm text-muted">{onlineUsers} online now</span>
-        </div>
-      </motion.div>
+      {/* ===================================================
+          HEADER
+      =================================================== */}
 
-      {/* Stat Cards */}
-      {cardsLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <StatCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <motion.div
-          variants={gridVariants}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-3 xl:grid-cols-5"
-        >
-          <StatCard
-            icon={<PiCurrencyDollarDuotone />}
-            label="Total Revenue"
-            rawValue={cards?.totalRevenue}
-            isCurrency={true}
-            tone="accent"
-          />
-          <StatCard
-            icon={<PiChartLineUpDuotone />}
-            label={profitMargin ? `Profit · ${profitMargin}%` : "Profit"}
-            rawValue={cards?.totalProfit}
-            isCurrency={true}
-            tone="primary"
-          />
-          <StatCard
-            icon={<PiShoppingBagDuotone />}
-            label="Total Orders"
-            rawValue={cards?.totalOrders}
-            tone="accent"
-          />
-          <StatCard
-            icon={<PiUsersDuotone />}
-            label="Total Users"
-            rawValue={cards?.totalUsers}
-            tone="primary"
-          />
-          <StatCard
-            icon={<PiPackageDuotone />}
-            label="Total Products"
-            rawValue={cards?.totalProducts}
-            tone="accent"
-          />
-        </motion.div>
-      )}
+      <section className="border-b border-border">
+        <div className="mx-auto max-w-[1600px] px-5 py-7 sm:px-8 lg:px-10">
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {loading && !revenueChart?.length ? (
-          <ChartSkeleton />
-        ) : (
-          <div className="card p-4 sm:p-6">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-lg text-text">Revenue</h3>
-              <PeriodFilter
-                current={revenuePeriod}
-                onChange={(p) => dispatch(setRevenuePeriod(p))}
-              />
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+                Admin Panel
+              </p>
+
+              <h1 className="mt-1 font-serif text-3xl tracking-tight text-text sm:text-4xl">
+                Dashboard
+              </h1>
+
+              <p className="mt-2 max-w-lg text-sm leading-6 text-muted">
+                Monitor your store performance,
+                orders and inventory from one place.
+              </p>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={revenueChart}>
-                <CartesianGrid stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="_id"
-                  stroke="var(--muted)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip
-                  cursor={{ stroke: "var(--border)" }}
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "12px",
-                    color: "var(--text)",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--accent)"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+
+            {/* ONLINE */}
+
+            <div className="flex items-center gap-3 text-sm text-muted">
+
+              <span className="relative flex h-2 w-2">
+                <span className="absolute h-full w-full rounded-full bg-green-500 opacity-30" />
+                <span className="relative h-2 w-2 rounded-full bg-green-500" />
+              </span>
+
+              <span>
+                {onlineUsers} customers online
+              </span>
+
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* ===================================================
+          CONTENT
+      =================================================== */}
+
+      <div className="mx-auto max-w-[1600px] px-5 py-7 sm:px-8 lg:px-10">
+
+        {/* =================================================
+            STATS
+        ================================================= */}
+
+        {cardsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map(
+              (_, index) => (
+                <StatSkeleton key={index} />
+              )
+            )}
+          </div>
+        ) : (
+          <motion.div
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: 0.05,
+                },
+              },
+            }}
+            initial="hidden"
+            animate="visible"
+            className="
+              grid grid-cols-1
+              divide-y divide-border
+              border border-border
+              sm:grid-cols-2
+              sm:divide-x sm:divide-y-0
+              xl:grid-cols-4
+            "
+          >
+            <StatCard
+              icon={<PiCurrencyDollarDuotone />}
+              label="Revenue"
+              value={cards?.totalRevenue}
+              isCurrency
+              note={
+                profitMargin
+                  ? `${profitMargin}% profit margin`
+                  : "Total store revenue"
+              }
+            />
+
+            <StatCard
+              icon={<PiShoppingBagDuotone />}
+              label="Orders"
+              value={cards?.totalOrders}
+              note="All orders"
+            />
+
+            <StatCard
+              icon={<PiUsersDuotone />}
+              label="Customers"
+              value={cards?.totalUsers}
+              note="Registered customers"
+            />
+
+            <StatCard
+              icon={<PiPackageDuotone />}
+              label="Products"
+              value={cards?.totalProducts}
+              note="Products in catalogue"
+            />
+          </motion.div>
         )}
 
-        {loading && !ordersChart?.length ? (
-          <ChartSkeleton />
-        ) : (
-          <div className="card p-4 sm:p-6">
-            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-lg text-text">Orders</h3>
-              <PeriodFilter
-                current={ordersPeriod}
-                onChange={(p) => dispatch(setOrdersPeriod(p))}
-              />
-            </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={ordersChart}>
-                <CartesianGrid stroke="var(--border)" vertical={false} />
-                <XAxis
-                  dataKey="_id"
-                  stroke="var(--muted)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis stroke="var(--muted)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip
-                  cursor={{ fill: "var(--bg)" }}
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "12px",
-                    color: "var(--text)",
-                  }}
-                />
-                <Bar dataKey="count" fill="var(--primary)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
+        {/* =================================================
+            CHARTS
+        ================================================= */}
 
-      {/* Tables & Lists */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Latest Orders */}
-        <div className="card p-4 sm:p-6">
-          <h3 className="mb-5 text-lg text-text">Latest Orders</h3>
-          <div>
-            {loading && !latestOrders?.length ? (
-              <>
-                <RowSkeleton />
-                <RowSkeleton />
-                <RowSkeleton />
-              </>
-            ) : !latestOrders || latestOrders.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">No orders yet.</p>
-            ) : (
-              latestOrders.map((order) => (
-                <div
-                  key={order._id}
-                  className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent">
-                      {(order.user?.name || "G")[0].toUpperCase()}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-text">
-                        {order.user?.name || "Guest"}
-                      </p>
-                      <p className="text-xs capitalize text-muted">{order.status}</p>
-                    </div>
-                  </div>
-                  <p className="shrink-0 text-sm font-semibold text-accent">
-                    {currency(order.totalPrice)}
+        <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+          {/* REVENUE */}
+
+          {loading && !revenueChart?.length ? (
+            <ChartSkeleton />
+          ) : (
+            <section className="border border-border bg-card p-5 sm:p-6">
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                  <h2 className="font-serif text-xl text-text">
+                    Revenue
+                  </h2>
+
+                  <p className="mt-1 text-xs text-muted">
+                    Sales performance over time
                   </p>
                 </div>
-              ))
-            )}
-          </div>
+
+                <PeriodFilter
+                  current={revenuePeriod}
+                  onChange={(period) =>
+                    dispatch(
+                      setRevenuePeriod(
+                        period
+                      )
+                    )
+                  }
+                />
+
+              </div>
+
+              <div className="mt-6 h-[280px] w-full">
+
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <LineChart
+                    data={
+                      revenueChart || []
+                    }
+                    margin={{
+                      top: 10,
+                      right: 5,
+                      left: -20,
+                      bottom: 0,
+                    }}
+                  >
+
+                    <CartesianGrid
+                      stroke="var(--border)"
+                      vertical={false}
+                      strokeDasharray="3 3"
+                    />
+
+                    <XAxis
+                      dataKey="_id"
+                      stroke="var(--muted)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+
+                    <YAxis
+                      stroke="var(--muted)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+
+                    <Tooltip
+                      cursor={{
+                        stroke:
+                          "var(--border)",
+                      }}
+                      contentStyle={{
+                        background:
+                          "var(--card)",
+                        border:
+                          "1px solid var(--border)",
+                        borderRadius:
+                          "4px",
+                        boxShadow:
+                          "0 8px 30px rgba(0,0,0,0.06)",
+                        color:
+                          "var(--text)",
+                      }}
+                    />
+
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="var(--primary)"
+                      strokeWidth={2}
+                      dot={false}
+                      activeDot={{
+                        r: 4,
+                      }}
+                    />
+
+                  </LineChart>
+                </ResponsiveContainer>
+
+              </div>
+            </section>
+          )}
+
+          {/* ORDERS */}
+
+          {loading && !ordersChart?.length ? (
+            <ChartSkeleton />
+          ) : (
+            <section className="border border-border bg-card p-5 sm:p-6">
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                  <h2 className="font-serif text-xl text-text">
+                    Orders
+                  </h2>
+
+                  <p className="mt-1 text-xs text-muted">
+                    Number of orders received
+                  </p>
+                </div>
+
+                <PeriodFilter
+                  current={ordersPeriod}
+                  onChange={(period) =>
+                    dispatch(
+                      setOrdersPeriod(
+                        period
+                      )
+                    )
+                  }
+                />
+
+              </div>
+
+              <div className="mt-6 h-[280px] w-full">
+
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <BarChart
+                    data={
+                      ordersChart || []
+                    }
+                    margin={{
+                      top: 10,
+                      right: 5,
+                      left: -20,
+                      bottom: 0,
+                    }}
+                  >
+
+                    <CartesianGrid
+                      stroke="var(--border)"
+                      vertical={false}
+                      strokeDasharray="3 3"
+                    />
+
+                    <XAxis
+                      dataKey="_id"
+                      stroke="var(--muted)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+
+                    <YAxis
+                      stroke="var(--muted)"
+                      fontSize={11}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+
+                    <Tooltip
+                      cursor={{
+                        fill: "var(--bg)",
+                      }}
+                      contentStyle={{
+                        background:
+                          "var(--card)",
+                        border:
+                          "1px solid var(--border)",
+                        borderRadius:
+                          "4px",
+                        boxShadow:
+                          "0 8px 30px rgba(0,0,0,0.06)",
+                        color:
+                          "var(--text)",
+                      }}
+                    />
+
+                    <Bar
+                      dataKey="count"
+                      fill="var(--primary)"
+                      radius={[2, 2, 0, 0]}
+                      maxBarSize={34}
+                    />
+
+                  </BarChart>
+                </ResponsiveContainer>
+
+              </div>
+            </section>
+          )}
         </div>
 
-        {/* Low Stock Products */}
-        <div className="card p-4 sm:p-6">
-          <h3 className="mb-5 text-lg text-text">Low Stock Products</h3>
-          <div>
-            {loading && !lowStock?.length ? (
-              <>
-                <RowSkeleton />
-                <RowSkeleton />
-                <RowSkeleton />
-              </>
-            ) : !lowStock || lowStock.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">All stock is healthy 👍</p>
-            ) : (
-              lowStock.map((item, i) => (
-                <div
-                  key={item._id || i}
-                  className="flex items-center justify-between gap-3 border-b border-border py-3 last:border-0"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-text">{item.name}</p>
-                    <p className="text-xs text-muted">
-                      {item.color} / {item.size}
-                    </p>
-                  </div>
+        {/* =================================================
+            LOWER CONTENT
+        ================================================= */}
 
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+          {/* =================================================
+              LATEST ORDERS
+          ================================================= */}
+
+          <section className="border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-5 py-5 sm:px-6">
+
+              <div>
+                <h2 className="font-serif text-xl text-text">
+                  Latest Orders
+                </h2>
+
+                <p className="mt-1 text-xs text-muted">
+                  Most recent customer activity
+                </p>
+              </div>
+
+              <PiArrowRight className="text-lg text-muted" />
+
+            </div>
+
+            <div className="px-5 sm:px-6">
+
+              {loading &&
+              !latestOrders?.length ? (
+                <>
+                  <RowSkeleton />
+                  <RowSkeleton />
+                  <RowSkeleton />
+                </>
+              ) : !latestOrders?.length ? (
+                <p className="py-10 text-center text-sm text-muted">
+                  No orders yet.
+                </p>
+              ) : (
+                latestOrders
+                  .slice(0, 6)
+                  .map((order) => (
+                    <div
+                      key={order._id}
+                      className="
+                        flex items-center
+                        justify-between gap-4
+                        border-b border-border
+                        py-4 last:border-0
+                      "
                     >
-                      Edit
-                    </button>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                      {item.stock} left
-                    </span>
-                  </div>
+
+                      <div className="flex min-w-0 items-center gap-3">
+
+                        <div className="
+                          flex h-9 w-9 shrink-0
+                          items-center justify-center
+                          border border-border
+                          bg-bg
+                          text-xs font-semibold
+                          text-text
+                        ">
+                          {(
+                            order.user?.name ||
+                            "G"
+                          )[0].toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0">
+
+                          <p className="truncate text-sm font-medium text-text">
+                            {order.user?.name ||
+                              "Guest"}
+                          </p>
+
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-[11px] text-muted">
+                              #
+                              {order.orderCode ||
+                                order._id
+                                  ?.slice(-6)
+                                  .toUpperCase()}
+                            </span>
+
+                            <span className="text-border">
+                              /
+                            </span>
+
+                            <Status
+                              status={
+                                order.status
+                              }
+                            />
+                          </div>
+
+                        </div>
+                      </div>
+
+                      <p className="shrink-0 text-sm font-semibold text-text">
+                        {currency(
+                          order.totalPrice
+                        )}
+                      </p>
+
+                    </div>
+                  ))
+              )}
+
+            </div>
+          </section>
+
+          {/* =================================================
+              LOW STOCK
+          ================================================= */}
+
+          <section className="border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-5 py-5 sm:px-6">
+
+              <div>
+                <div className="flex items-center gap-2">
+
+                  <h2 className="font-serif text-xl text-text">
+                    Inventory
+                  </h2>
+
+                  {lowStock?.length > 0 && (
+                    <PiWarningCircle className="text-lg text-amber-600" />
+                  )}
+
                 </div>
-              ))
-            )}
-          </div>
+
+                <p className="mt-1 text-xs text-muted">
+                  Products that need attention
+                </p>
+              </div>
+
+            </div>
+
+            <div className="px-5 sm:px-6">
+
+              {loading &&
+              !lowStock?.length ? (
+                <>
+                  <RowSkeleton />
+                  <RowSkeleton />
+                  <RowSkeleton />
+                </>
+              ) : !lowStock?.length ? (
+                <div className="py-10 text-center">
+
+                  <p className="text-sm font-medium text-text">
+                    Inventory looks healthy
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted">
+                    No products need restocking.
+                  </p>
+
+                </div>
+              ) : (
+                lowStock
+                  .slice(0, 6)
+                  .map((item, index) => (
+                    <div
+                      key={
+                        item._id ||
+                        index
+                      }
+                      className="
+                        flex items-center
+                        justify-between gap-4
+                        border-b border-border
+                        py-4 last:border-0
+                      "
+                    >
+
+                      <div className="min-w-0">
+
+                        <p className="truncate text-sm font-medium text-text">
+                          {item.name}
+                        </p>
+
+                        <p className="mt-1 text-xs text-muted">
+                          {item.color ||
+                            "No color"}{" "}
+                          ·{" "}
+                          {item.size ||
+                            "No size"}
+                        </p>
+
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-3">
+
+                        <span className="text-xs font-medium text-amber-600">
+                          {item.stock} left
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleEdit(
+                              item
+                            )
+                          }
+                          className="
+                            flex h-8 w-8
+                            items-center justify-center
+                            border border-border
+                            text-muted
+                            transition-colors
+                            hover:bg-bg
+                            hover:text-text
+                          "
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <PiPencilSimple />
+                        </button>
+
+                      </div>
+
+                    </div>
+                  ))
+              )}
+
+            </div>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
