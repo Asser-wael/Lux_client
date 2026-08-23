@@ -112,30 +112,30 @@ function App() {
          PRINT
       ----------------------------------------------------- */
 
-      try {
-        await printOrder(order);
+      // try {
+      //   await printOrder(order);
 
-        console.log(
-          "✅ Order printed successfully:",
-          order._id
-        );
+      //   console.log(
+      //     "✅ Order printed successfully:",
+      //     order._id
+      //   );
 
-        showToast({
-          type: "success",
-          message: "Order printed successfully",
-        });
-      } catch (error) {
-        console.error(
-          "❌ Order printing failed:",
-          error
-        );
+      //   showToast({
+      //     type: "success",
+      //     message: "Order printed successfully",
+      //   });
+      // } catch (error) {
+      //   console.error(
+      //     "❌ Order printing failed:",
+      //     error
+      //   );
 
-        showToast({
-          type: "error",
-          message:
-            "Order received, but printing failed",
-        });
-      }
+      //   showToast({
+      //     type: "error",
+      //     message:
+      //       "Order received, but printing failed",
+      //   });
+      // }
     },
     [dispatch]
   );
