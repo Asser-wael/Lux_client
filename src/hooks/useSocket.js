@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
+// hooks/useSocket.js
 import { io } from "socket.io-client";
+import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 
-const useSocket = () => {
+export default function useSocket() {
+  const accessToken = useSelector((state) => state.auth.accessToken);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const socketInstance = io(import.meta.env.VITE_SOCKET_URL, {
+    const newSocket = io(import.meta.env.VITE_API_URL, {
       withCredentials: true,
+      auth: {
+        token: accessToken, // ✅ ده اللي io.use() هيقراه
+      },
     });
 
-    setSocket(socketInstance);
+    setSocket(newSocket);
 
-    return () => {
-      socketInstance.disconnect();
-    };
-  }, []);
+    return () => newSocket.disconnect();
+  }, [accessToken]);
 
   return socket;
-};
-
-export default useSocket;
+}
