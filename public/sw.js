@@ -20,7 +20,7 @@ self.addEventListener("push", (event) => {
 
     // بيانات إضافية نقدر نستخدمها عند الضغط
     data: {
-      url: data.url || "/",
+      url: data.url || "/orders",
       orderId: data.orderId || null,
     },
 
