@@ -99,10 +99,7 @@ function App() {
 
       showToast({
         type: "adminOrder",
-        message: `New order received from ${
-          order.shippingAddress?.fullName ||
-          "Customer"
-        }`,
+        message: `New Order • ${order.items?.length || 0} items • ${order.totalPrice.toLocaleString()} EGP`,
       });
 
       /* -----------------------------------------------------
@@ -154,9 +151,8 @@ function App() {
 
     showToast({
       type: "lowStock",
-      message: `${data.name} is running low on stock (${
-        data.color
-      } - ${data.size})`,
+      message: `${data.name} is running low on stock (${data.color
+        } - ${data.size})`,
     });
   }, []);
 
