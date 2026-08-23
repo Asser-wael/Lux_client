@@ -99,7 +99,8 @@ function App() {
 
       showToast({
         type: "adminOrder",
-        message: `New Order • ${order.items?.length || 0} items • ${order.totalPrice.toLocaleString()} EGP`,
+        message: `${order.items?.length || 0} items received`,
+        amount: order.totalPrice,
       });
 
       /* -----------------------------------------------------
