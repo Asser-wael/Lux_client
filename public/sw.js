@@ -1,20 +1,3 @@
-// self.addEventListener("push", (event) => {
-//   const data = event.data.json();
-
-//   event.waitUntil(
-//     self.registration.showNotification(data.title, {
-//       body: data.body,
-//       icon: "/icon.png",
-//     })
-//   );
-// });
-
-
-
-// self.addEventListener("notificationclick", (event) => {
-//   event.notification.close();
-//   event.waitUntil(clients.openWindow("/"));
-// });
 
 self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
@@ -22,8 +5,7 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body,
     icon: "/image.png",
-    badge: "/image.png",
-
+    badge: "/notification-badge.png",
     // صورة كبيرة اختيارية
     image: data.image || undefined,
 
