@@ -14,7 +14,9 @@ import {
 // CONSTANTS
 // ==========================================
 
-const PERSISTENT_ACCENT = "#10B981"; // Emerald green
+const ORDER_ACCENT = "#10B981"; // Emerald
+const STOCK_ACCENT = "#F59E0B"; // Amber
+const ERROR_ACCENT = "#EF4444";
 
 // ==========================================
 // TOAST CARD COMPONENT
@@ -31,6 +33,8 @@ const ToastCard = ({
   isAdminOrder,
   persistent,
 }) => {
+  const activeAccent = accent;
+
   return (
     <motion.div
       initial={{
@@ -66,18 +70,11 @@ const ToastCard = ({
         backdrop-blur-[20px]
       "
       style={{
-        borderColor: persistent
-          ? `${PERSISTENT_ACCENT}40`
-          : "var(--border)",
-        boxShadow: persistent
-          ? `
-            0 20px 50px rgba(0, 0, 0, 0.14),
-            0 0 30px ${PERSISTENT_ACCENT}20
-          `
-          : `
-            0 20px 50px rgba(0, 0, 0, 0.14),
-            0 0 30px ${accent}12
-          `,
+        borderColor: `${activeAccent}35`,
+        boxShadow: `
+          0 20px 50px rgba(0, 0, 0, 0.14),
+          0 0 30px ${activeAccent}18
+        `,
       }}
     >
       {/* ==========================================
@@ -91,11 +88,11 @@ const ToastCard = ({
             linear-gradient(
               90deg,
               transparent 0%,
-              ${persistent ? PERSISTENT_ACCENT : accent} 50%,
+              ${activeAccent} 50%,
               transparent 100%
             )
           `,
-          boxShadow: `0 0 14px ${persistent ? PERSISTENT_ACCENT : accent}`,
+          boxShadow: `0 0 14px ${activeAccent}`,
         }}
       />
 
@@ -119,30 +116,36 @@ const ToastCard = ({
               justify-center
               rounded-2xl
               border
-              border-[var(--border)]
             "
             style={{
-              color: persistent ? PERSISTENT_ACCENT : accent,
+              borderColor: `${activeAccent}30`,
+              color: activeAccent,
               background: `
                 radial-gradient(
                   circle at center,
-                  ${persistent ? PERSISTENT_ACCENT : accent}18,
+                  ${activeAccent}18,
                   transparent 80%
                 )
               `,
             }}
           >
-            {/* Glow */}
-            <span
+            <motion.span
               className="
                 absolute
                 inset-0
                 rounded-2xl
-                opacity-25
                 blur-sm
               "
+              animate={{
+                opacity: [0.12, 0.28, 0.12],
+              }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               style={{
-                background: persistent ? PERSISTENT_ACCENT : accent,
+                background: activeAccent,
               }}
             />
 
@@ -170,7 +173,22 @@ const ToastCard = ({
                 {title}
               </h3>
 
-              {/* Success Pulse */}
+              {persistent && (
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    shrink-0
+                    rounded-full
+                    animate-pulse
+                  "
+                  style={{
+                    background: activeAccent,
+                    boxShadow: `0 0 8px ${activeAccent}`,
+                  }}
+                />
+              )}
+
               {isSuccess && (
                 <span
                   className="
@@ -203,12 +221,21 @@ const ToastCard = ({
               {message}
             </p>
 
-            {/* Persistent badge */}
+            {/* Persistent Badge */}
             {persistent && (
               <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
+                initial={{
+                  opacity: 0,
+                  y: -4,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.15,
+                  duration: 0.25,
+                }}
                 className="
                   mt-2
                   inline-flex
@@ -219,19 +246,27 @@ const ToastCard = ({
                   py-1
                 "
                 style={{
-                  background: `${PERSISTENT_ACCENT}14`,
-                  color: PERSISTENT_ACCENT,
+                  background: `${activeAccent}12`,
+                  color: activeAccent,
                 }}
               >
-                <FiBell size={11} />
-                <span className="text-[10px] font-bold uppercase tracking-[0.08em]">
+                <FiBell size={10} />
+
+                <span
+                  className="
+                    text-[9px]
+                    font-bold
+                    uppercase
+                    tracking-[0.1em]
+                  "
+                >
                   Requires attention
                 </span>
               </motion.div>
             )}
           </div>
 
-          {/* Close Button */}
+          {/* Close */}
           <button
             type="button"
             onClick={() => toast.dismiss(t.id)}
@@ -266,8 +301,8 @@ const ToastCard = ({
           <motion.div
             initial={{
               opacity: 0,
-              y: 8,
-              scale: 0.97,
+              y: 10,
+              scale: 0.96,
             }}
             animate={{
               opacity: 1,
@@ -276,65 +311,120 @@ const ToastCard = ({
             }}
             transition={{
               delay: 0.12,
-              duration: 0.35,
+              duration: 0.4,
               ease: [0.16, 1, 0.3, 1],
             }}
             className="
+              group
               relative
               mt-4
               overflow-hidden
-              rounded-2xl
+              rounded-[18px]
               border
               px-4
               py-3.5
             "
             style={{
-              borderColor: `${PERSISTENT_ACCENT}30`,
+              borderColor: `${ORDER_ACCENT}35`,
               background: `
                 linear-gradient(
                   135deg,
-                  ${PERSISTENT_ACCENT}14 0%,
-                  transparent 65%
+                  ${ORDER_ACCENT}15 0%,
+                  ${ORDER_ACCENT}05 45%,
+                  transparent 100%
                 )
               `,
             }}
           >
-            {/* Background Glow */}
-            <div
+            {/* Decorative Glow */}
+            <motion.div
               className="
                 pointer-events-none
                 absolute
-                -right-10
+                -right-8
                 -top-10
-                h-24
-                w-24
+                h-28
+                w-28
                 rounded-full
-                blur-2xl
-                opacity-20
+                blur-3xl
               "
+              animate={{
+                opacity: [0.08, 0.2, 0.08],
+                scale: [0.9, 1.1, 0.9],
+              }}
+              transition={{
+                duration: 2.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               style={{
-                background: PERSISTENT_ACCENT,
+                background: ORDER_ACCENT,
+              }}
+            />
+
+            {/* Shine */}
+            <motion.div
+              className="
+                pointer-events-none
+                absolute
+                inset-y-0
+                -left-[100%]
+                w-[60%]
+                skew-x-[-20deg]
+              "
+              animate={{
+                left: ["-100%", "180%"],
+              }}
+              transition={{
+                duration: 3.5,
+                repeat: Infinity,
+                repeatDelay: 2,
+                ease: "easeInOut",
+              }}
+              style={{
+                background: `
+                  linear-gradient(
+                    90deg,
+                    transparent,
+                    ${ORDER_ACCENT}12,
+                    transparent
+                  )
+                `,
               }}
             />
 
             <div className="relative flex items-center justify-between gap-4">
 
-              {/* Label */}
+              {/* Left */}
               <div className="flex flex-col">
 
-                <span
-                  className="
-                    text-[9px]
-                    font-bold
-                    uppercase
-                    tracking-[0.2em]
-                  "
-                  style={{
-                    color: "var(--muted)",
-                  }}
-                >
-                  Order Total
-                </span>
+                <div className="flex items-center gap-2">
+
+                  <span
+                    className="
+                      text-[9px]
+                      font-bold
+                      uppercase
+                      tracking-[0.2em]
+                    "
+                    style={{
+                      color: "var(--muted)",
+                    }}
+                  >
+                    Order Total
+                  </span>
+
+                  <span
+                    className="
+                      h-1
+                      w-1
+                      rounded-full
+                    "
+                    style={{
+                      background: ORDER_ACCENT,
+                    }}
+                  />
+                </div>
 
                 <span
                   className="
@@ -353,7 +443,7 @@ const ToastCard = ({
               {/* Amount */}
               <motion.div
                 initial={{
-                  scale: 0.8,
+                  scale: 0.75,
                   opacity: 0,
                 }}
                 animate={{
@@ -361,24 +451,30 @@ const ToastCard = ({
                   opacity: 1,
                 }}
                 transition={{
-                  delay: 0.18,
-                  duration: 0.4,
+                  delay: 0.2,
+                  duration: 0.5,
                   type: "spring",
                   stiffness: 260,
-                  damping: 18,
+                  damping: 17,
                 }}
-                className="flex items-baseline gap-1"
+                className="
+                  flex
+                  items-baseline
+                  gap-1
+                  shrink-0
+                "
               >
                 <span
                   className="
-                    text-[23px]
+                    text-[24px]
                     font-black
-                    tracking-tight
+                    tracking-[-0.03em]
                   "
                   style={{
-                    color: PERSISTENT_ACCENT,
+                    color: ORDER_ACCENT,
                     textShadow: `
-                      0 0 18px ${PERSISTENT_ACCENT}40
+                      0 0 8px ${ORDER_ACCENT}30,
+                      0 0 20px ${ORDER_ACCENT}20
                     `,
                   }}
                 >
@@ -387,12 +483,12 @@ const ToastCard = ({
 
                 <span
                   className="
-                    text-[11px]
-                    font-bold
-                    tracking-wide
+                    text-[10px]
+                    font-extrabold
+                    tracking-[0.08em]
                   "
                   style={{
-                    color: PERSISTENT_ACCENT,
+                    color: ORDER_ACCENT,
                   }}
                 >
                   EGP
@@ -405,10 +501,6 @@ const ToastCard = ({
 
       {/* ==========================================
           BOTTOM BAR
-          - Persistent toasts (adminOrder / lowStock):
-            green animated bar + icon, no countdown
-            (stays until the user closes it manually).
-          - Regular toasts: normal countdown progress bar.
       ========================================== */}
 
       {persistent ? (
@@ -416,7 +508,7 @@ const ToastCard = ({
           className="
             relative
             flex
-            h-[26px]
+            h-[27px]
             w-full
             items-center
             justify-center
@@ -424,17 +516,28 @@ const ToastCard = ({
             overflow-hidden
           "
           style={{
-            background: `${PERSISTENT_ACCENT}12`,
+            background: `${activeAccent}10`,
           }}
         >
+          {/* Moving Shine */}
           <motion.div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(90deg, transparent, ${PERSISTENT_ACCENT}30, transparent)`,
+              background: `
+                linear-gradient(
+                  90deg,
+                  transparent,
+                  ${activeAccent}25,
+                  transparent
+                )
+              `,
               backgroundSize: "200% 100%",
             }}
             animate={{
-              backgroundPosition: ["-100% 0%", "200% 0%"],
+              backgroundPosition: [
+                "-100% 0%",
+                "200% 0%",
+              ],
             }}
             transition={{
               duration: 2.2,
@@ -444,23 +547,40 @@ const ToastCard = ({
           />
 
           <span
-            className="relative flex h-1.5 w-1.5 rounded-full"
+            className="
+              relative
+              h-1.5
+              w-1.5
+              rounded-full
+            "
             style={{
-              background: PERSISTENT_ACCENT,
-              boxShadow: `0 0 6px ${PERSISTENT_ACCENT}`,
+              background: activeAccent,
+              boxShadow: `0 0 7px ${activeAccent}`,
             }}
           />
 
           <span
-            className="relative text-[10px] font-bold uppercase tracking-[0.1em]"
-            style={{ color: PERSISTENT_ACCENT }}
+            className="
+              relative
+              text-[9px]
+              font-bold
+              uppercase
+              tracking-[0.12em]
+            "
+            style={{
+              color: activeAccent,
+            }}
           >
             Tap × to dismiss
           </span>
         </div>
       ) : (
         <div
-          className="h-[2.5px] w-full overflow-hidden"
+          className="
+            h-[2.5px]
+            w-full
+            overflow-hidden
+          "
           style={{
             background: "rgba(0,0,0,0.03)",
           }}
@@ -505,22 +625,22 @@ export const showToast = ({
 }) => {
   const config = {
     // ========================================
-    // ADMIN ORDER — stays until manually dismissed
+    // ADMIN ORDER
     // ========================================
 
     adminOrder: {
-      accent: PERSISTENT_ACCENT,
+      accent: ORDER_ACCENT,
       icon: <FiShoppingBag />,
       title: "New Order",
       persistent: true,
     },
 
     // ========================================
-    // LOW STOCK — stays until manually dismissed
+    // LOW STOCK
     // ========================================
 
     lowStock: {
-      accent: PERSISTENT_ACCENT,
+      accent: STOCK_ACCENT,
       icon: <FiAlertTriangle />,
       title: "Stock Alert",
       persistent: true,
@@ -553,7 +673,7 @@ export const showToast = ({
     // ========================================
 
     error: {
-      accent: "#EF4444",
+      accent: ERROR_ACCENT,
       icon: <FiXCircle />,
       title: "An Error Occurred",
       persistent: false,
@@ -561,7 +681,7 @@ export const showToast = ({
   };
 
   // ==========================================
-  // HANDLE BOOLEAN TYPES
+  // BOOLEAN TYPES
   // ==========================================
 
   let selectedType = type;
@@ -604,8 +724,10 @@ export const showToast = ({
       />
     ),
     {
-      // ✅ persistent toasts never auto-dismiss
-      duration: current.persistent ? Infinity : 4000,
+      duration: current.persistent
+        ? Infinity
+        : 4000,
+
       position: "top-right",
     }
   );
