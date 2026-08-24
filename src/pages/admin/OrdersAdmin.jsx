@@ -1268,15 +1268,15 @@ function OrderModal({
               </p>
             </div>
             <div className="flex gap-2">
-<button
-  type="button"
-  onClick={() => {
-    window.open(
-      `https://wa.me/${order.shippingAddress.phone}`,
-      "_blank"
-    );
-  }}
-  className="
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(
+                    `https://wa.me/${order.shippingAddress.phone}`,
+                    "_blank"
+                  );
+                }}
+                className="
     h-9
     px-4
     rounded-md
@@ -1291,13 +1291,13 @@ function OrderModal({
     transition
     shadow-sm
   "
->
-  <FaWhatsapp className="text-base" />
-  GO TO WhatsApp
-</button>
+              >
+                <FaWhatsapp className="text-base" />
+                GO TO WhatsApp
+              </button>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () =>  {
                   try {
                     await printOrder(order);
 
