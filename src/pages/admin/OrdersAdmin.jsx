@@ -1288,7 +1288,7 @@ function OrderModal({
                   const cleanPhone = String(phone).replace(/\D/g, "");
 
                   window.open(
-                    `https://wa.me/${cleanPhone}`,
+                    `https://wa.me/2${cleanPhone}`,
                     "_blank",
                     "noopener,noreferrer"
                   );
