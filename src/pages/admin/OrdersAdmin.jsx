@@ -22,7 +22,7 @@ import {
   FiCalendar,
   FiUser,
 } from "react-icons/fi";
-
+import { FaWhatsapp } from "react-icons/fa";
 import {
   getOrders,
   changeOrderStatus,
@@ -1225,79 +1225,95 @@ function OrderModal({
           {/* TOTAL */}
           <div
             className="
-              pt-5
-              border-t
-              border-[var(--border)]
-              flex
-              items-end
-              justify-between
-              gap-4
-            "
+    pt-5
+    border-t
+    border-[var(--border)]
+    flex
+    items-end
+    justify-between
+    gap-4
+  "
           >
             <div>
               <p
                 className="
-                  text-[10px]
-                  uppercase
-                  tracking-[0.12em]
-                  text-[var(--muted)]
-                "
+        text-[10px]
+        uppercase
+        tracking-[0.12em]
+        text-[var(--muted)]
+      "
               >
                 Grand Total
               </p>
 
               <p
                 className="
-                  mt-1
-                  text-xl
-                  sm:text-2xl
-                  font-semibold
-                "
+        mt-1
+        text-xl
+        sm:text-2xl
+        font-semibold
+      "
               >
-                {order.totalPrice?.toLocaleString() ||
-                  0}{" "}
+                {order.totalPrice?.toLocaleString() || 0}{" "}
                 <span
                   className="
-                    text-xs
-                    font-normal
-                    text-[var(--muted)]
-                  "
+          text-xs
+          font-normal
+          text-[var(--muted)]
+        "
                 >
                   EGP
                 </span>
               </p>
             </div>
-            <div className="flex gap-2">
+
+            <div className="flex items-center gap-2">
+              {/* WhatsApp */}
               <button
                 type="button"
+                title="Open WhatsApp"
+                aria-label="Open WhatsApp"
                 onClick={() => {
+                  const phone = order?.shippingAddress?.phone;
+
+                  if (!phone) {
+                    showToast({
+                      type: "error",
+                      message: "Customer phone number is not available",
+                    });
+                    return;
+                  }
+
+                  const cleanPhone = String(phone).replace(/\D/g, "");
+
                   window.open(
-                    `https://wa.me/${order.shippingAddress.phone}`,
-                    "_blank"
+                    `https://wa.me/${cleanPhone}`,
+                    "_blank",
+                    "noopener,noreferrer"
                   );
                 }}
                 className="
-    h-9
-    px-4
-    rounded-md
-    bg-[#25D366]
-    text-white
-    text-xs
-    font-medium
-    flex
-    items-center
-    gap-2
-    hover:bg-[#20bd5a]
-    transition
-    shadow-sm
-  "
+        h-9
+        w-9
+        rounded-md
+        bg-[#25D366]
+        text-white
+        flex
+        items-center
+        justify-center
+        hover:bg-[#20BD5A]
+        transition
+        shadow-sm
+        hover:shadow-md
+      "
               >
-                <FaWhatsapp className="text-base" />
-                GO TO WhatsApp
+                <FaWhatsapp className="text-lg" />
               </button>
+
+              {/* Print */}
               <button
                 type="button"
-                onClick={async () =>  {
+                onClick={async () => {
                   try {
                     await printOrder(order);
 
@@ -1318,39 +1334,40 @@ function OrderModal({
 
                     showToast({
                       type: "error",
-                      message:
-                        "Order received, but printing failed",
+                      message: "Order received, but printing failed",
                     });
                   }
                 }}
                 className="
-              h-9
-              px-4
-              rounded-md
-              border
-              border-[var(--border)]
-              text-xs
-              font-medium
-              hover:bg-[var(--bg)]
-              transition
-              "
+        h-9
+        px-4
+        rounded-md
+        border
+        border-[var(--border)]
+        text-xs
+        font-medium
+        hover:bg-[var(--bg)]
+        transition
+      "
               >
                 Print
               </button>
+
+              {/* Close */}
               <button
                 type="button"
                 onClick={onClose}
                 className="
-              h-9
-              px-4
-              rounded-md
-              border
-              border-[var(--border)]
-                text-xs
-                font-medium
-                hover:bg-[var(--bg)]
-                transition
-                "
+        h-9
+        px-4
+        rounded-md
+        border
+        border-[var(--border)]
+        text-xs
+        font-medium
+        hover:bg-[var(--bg)]
+        transition
+      "
               >
                 Close
               </button>
