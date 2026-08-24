@@ -1268,25 +1268,33 @@ function OrderModal({
               </p>
             </div>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  window.open(`https://wa.me/${order.shippingAddress.phone}`)
-                }}
-                className="
-              h-9
-              px-4
-              rounded-md
-              border
-              border-[var(--border)]
-              text-xs
-              font-medium
-              hover:bg-[var(--bg)]
-              transition
-              "
-              >
-                GO TO Whats
-              </button>
+<button
+  type="button"
+  onClick={() => {
+    window.open(
+      `https://wa.me/${order.shippingAddress.phone}`,
+      "_blank"
+    );
+  }}
+  className="
+    h-9
+    px-4
+    rounded-md
+    bg-[#25D366]
+    text-white
+    text-xs
+    font-medium
+    flex
+    items-center
+    gap-2
+    hover:bg-[#20bd5a]
+    transition
+    shadow-sm
+  "
+>
+  <FaWhatsapp className="text-base" />
+  GO TO WhatsApp
+</button>
               <button
                 type="button"
                 onClick={() => {
