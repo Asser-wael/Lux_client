@@ -27,6 +27,7 @@ import {
   getOrders,
   changeOrderStatus,
 } from "../../features/order/orderSlice";
+import { printOrder } from "../../utils/printOrder";
 
 // ============================================================
 // STATUS CONFIG
@@ -1266,24 +1267,86 @@ function OrderModal({
                 </span>
               </p>
             </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  window.open(`https://wa.me/${order.shippingAddress.phone}`)
+                }}
+                className="
+              h-9
+              px-4
+              rounded-md
+              border
+              border-[var(--border)]
+              text-xs
+              font-medium
+              hover:bg-[var(--bg)]
+              transition
+              "
+              >
+                GO TO Whats
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    await printOrder(order);
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="
-                h-9
-                px-4
-                rounded-md
-                border
-                border-[var(--border)]
+                    console.log(
+                      "✅ Order printed successfully:",
+                      order._id
+                    );
+
+                    showToast({
+                      type: "success",
+                      message: "Order printed successfully",
+                    });
+                  } catch (error) {
+                    console.error(
+                      "❌ Order printing failed:",
+                      error
+                    );
+
+                    showToast({
+                      type: "error",
+                      message:
+                        "Order received, but printing failed",
+                    });
+                  }
+                }}
+                className="
+              h-9
+              px-4
+              rounded-md
+              border
+              border-[var(--border)]
+              text-xs
+              font-medium
+              hover:bg-[var(--bg)]
+              transition
+              "
+              >
+                Print
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="
+              h-9
+              px-4
+              rounded-md
+              border
+              border-[var(--border)]
                 text-xs
                 font-medium
                 hover:bg-[var(--bg)]
                 transition
-              "
-            >
-              Close
-            </button>
+                "
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       </div>
