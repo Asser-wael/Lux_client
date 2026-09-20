@@ -17,6 +17,7 @@ import { showToast } from "./utils/showToast.jsx";
 import { getUser } from "./features/auth/authSlice.js";
 import { getCart } from "./features/cart/cartSlice.js";
 import { addOrder } from "./features/order/orderSlice.js";
+import { getCategories } from "./features/category/categorySlice.js";
 
 function App() {
   const dispatch = useDispatch();
@@ -225,6 +226,7 @@ function App() {
 
   useEffect(() => {
     dispatch(getCart());
+    dispatch(getCategories());
   }, [dispatch]);
 
   /* =========================================================
