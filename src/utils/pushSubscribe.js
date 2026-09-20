@@ -1,15 +1,26 @@
 import axiosInstance from "../api/axiosInstance";
-import { store } from "../app/store";
-import { showToast } from "./showToast";
+
+export function isPushSupported() {
+  return (
+    "serviceWorker" in navigator &&
+    "PushManager" in window &&
+    "Notification" in window
+  );
+}
 
 export async function subscribeToPush() {
+  if (!isPushSupported()) {
+    return;
+  }
+
   try {
     const register = await navigator.serviceWorker.register("/sw.js");
 
     const permission = await Notification.requestPermission();
 
-    if (permission !== "granted") return;
-
+    if (permission !== "granted") {
+      return;
+    }
 
     let subscription = await register.pushManager.getSubscription();
 
@@ -22,20 +33,44 @@ export async function subscribeToPush() {
       });
     }
 
-
-    const res = await axiosInstance.post("/notifications/subscribe", {
+    await axiosInstance.post("/notifications/subscribe", {
       subscription,
     });
-
-
-
   } catch (err) {
-    console.log(err);
-    console.log(err.response);
-    console.log(err.response?.data);
+    console.error(
+      "Push subscription failed:",
+      err.response?.data || err.message
+    );
   }
 }
 
+export async function unsubscribeFromPush() {
+  if (!isPushSupported()) {
+    return;
+  }
+
+  try {
+    const register = await navigator.serviceWorker.getRegistration();
+    const subscription = await register?.pushManager.getSubscription();
+
+    if (!subscription) {
+      return;
+    }
+
+    const endpoint = subscription.endpoint;
+
+    await subscription.unsubscribe();
+
+    await axiosInstance.post("/notifications/unsubscribe", {
+      endpoint,
+    });
+  } catch (err) {
+    console.error(
+      "Push unsubscribe failed:",
+      err.response?.data || err.message
+    );
+  }
+}
 
 function urlBase64ToUint8Array(base64String) {
   const padding = "=".repeat(
