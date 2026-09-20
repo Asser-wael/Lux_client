@@ -22,16 +22,16 @@ import { getCategories } from "./features/category/categorySlice.js";
 function App() {
   const dispatch = useDispatch();
 
-  const socket = useSocket();
-
+  
   const { user, accessToken } = useSelector(
     (state) => state.auth
   );
-
+  
   const { orders } = useSelector(
     (state) => state.orders
   );
-
+  
+  const socket = useSocket(accessToken);
   /* =========================================================
      AUTH
   ========================================================= */
