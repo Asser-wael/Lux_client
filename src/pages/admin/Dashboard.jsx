@@ -17,13 +17,13 @@ import {
   PiShoppingBagDuotone,
   PiUsersDuotone,
   PiPackageDuotone,
-  PiArrowUpRight,
   PiWarningCircle,
   PiPencilSimple,
   PiArrowRight,
 } from "react-icons/pi";
 
 import useSocket from "../../hooks/useSocket";
+
 import {
   fetchDashboardCards,
   fetchRevenueChart,
@@ -79,7 +79,7 @@ const fadeUp = {
 
 function PeriodFilter({ current, onChange }) {
   return (
-    <div className="flex items-center border-b border-border">
+    <div className="flex items-center border-b border-border overflow-x-auto scrollbar-none">
       {PERIODS.map((period) => {
         const active = current === period;
 
@@ -89,7 +89,7 @@ function PeriodFilter({ current, onChange }) {
             type="button"
             onClick={() => onChange(period)}
             className={`
-              relative px-3 py-2 text-xs font-medium capitalize
+              relative shrink-0 px-3 py-2 text-xs font-medium capitalize
               transition-colors
               ${
                 active
@@ -138,12 +138,12 @@ function StatCard({
       "
     >
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
             {label}
           </p>
 
-          <p className="mt-3 text-[26px] font-semibold tracking-tight text-text sm:text-[30px]">
+          <p className="mt-3 truncate text-[22px] font-semibold tracking-tight text-text sm:text-[26px] lg:text-[30px]">
             {displayValue}
           </p>
 
@@ -262,13 +262,30 @@ function Status({ status }) {
 
 export default function Dashboard() {
   const dispatch = useDispatch();
-  const socket = useSocket();
+
+  /* =======================================================
+     SOCKET AUTH
+  ======================================================= */
+
+  const { accessToken } = useSelector(
+    (state) => state.auth
+  );
+
+  const socket = useSocket(accessToken);
 
   const [onlineUsers, setOnlineUsers] = useState(0);
+
+  /* =======================================================
+     PRODUCTS
+  ======================================================= */
 
   const { editid } = useSelector(
     (state) => state.products
   );
+
+  /* =======================================================
+     DASHBOARD STATE
+  ======================================================= */
 
   const {
     cards,
@@ -279,7 +296,9 @@ export default function Dashboard() {
     revenuePeriod,
     ordersPeriod,
     loading,
-  } = useSelector((state) => state.dashboard);
+  } = useSelector(
+    (state) => state.dashboard
+  );
 
   /* =======================================================
      SOCKET
@@ -288,6 +307,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!socket) return;
 
+    // Join admin room
     socket.emit("admin");
 
     const handleOnlineUsers = (count) => {
@@ -417,6 +437,7 @@ export default function Dashboard() {
 
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full rounded-full bg-green-500 opacity-30" />
+
                 <span className="relative h-2 w-2 rounded-full bg-green-500" />
               </span>
 
@@ -467,6 +488,7 @@ export default function Dashboard() {
               xl:grid-cols-4
             "
           >
+
             <StatCard
               icon={<PiCurrencyDollarDuotone />}
               label="Revenue"
@@ -499,6 +521,7 @@ export default function Dashboard() {
               value={cards?.totalProducts}
               note="Products in catalogue"
             />
+
           </motion.div>
         )}
 
@@ -508,7 +531,9 @@ export default function Dashboard() {
 
         <div className="mt-7 grid grid-cols-1 gap-6 xl:grid-cols-2">
 
-          {/* REVENUE */}
+          {/* =================================================
+              REVENUE
+          ================================================= */}
 
           {loading && !revenueChart?.length ? (
             <ChartSkeleton />
@@ -531,9 +556,7 @@ export default function Dashboard() {
                   current={revenuePeriod}
                   onChange={(period) =>
                     dispatch(
-                      setRevenuePeriod(
-                        period
-                      )
+                      setRevenuePeriod(period)
                     )
                   }
                 />
@@ -546,10 +569,9 @@ export default function Dashboard() {
                   width="100%"
                   height="100%"
                 >
+
                   <LineChart
-                    data={
-                      revenueChart || []
-                    }
+                    data={revenueChart || []}
                     margin={{
                       top: 10,
                       right: 5,
@@ -581,20 +603,16 @@ export default function Dashboard() {
 
                     <Tooltip
                       cursor={{
-                        stroke:
-                          "var(--border)",
+                        stroke: "var(--border)",
                       }}
                       contentStyle={{
-                        background:
-                          "var(--card)",
+                        background: "var(--card)",
                         border:
                           "1px solid var(--border)",
-                        borderRadius:
-                          "4px",
+                        borderRadius: "4px",
                         boxShadow:
                           "0 8px 30px rgba(0,0,0,0.06)",
-                        color:
-                          "var(--text)",
+                        color: "var(--text)",
                       }}
                     />
 
@@ -610,13 +628,16 @@ export default function Dashboard() {
                     />
 
                   </LineChart>
+
                 </ResponsiveContainer>
 
               </div>
             </section>
           )}
 
-          {/* ORDERS */}
+          {/* =================================================
+              ORDERS
+          ================================================= */}
 
           {loading && !ordersChart?.length ? (
             <ChartSkeleton />
@@ -639,9 +660,7 @@ export default function Dashboard() {
                   current={ordersPeriod}
                   onChange={(period) =>
                     dispatch(
-                      setOrdersPeriod(
-                        period
-                      )
+                      setOrdersPeriod(period)
                     )
                   }
                 />
@@ -654,10 +673,9 @@ export default function Dashboard() {
                   width="100%"
                   height="100%"
                 >
+
                   <BarChart
-                    data={
-                      ordersChart || []
-                    }
+                    data={ordersChart || []}
                     margin={{
                       top: 10,
                       right: 5,
@@ -692,16 +710,13 @@ export default function Dashboard() {
                         fill: "var(--bg)",
                       }}
                       contentStyle={{
-                        background:
-                          "var(--card)",
+                        background: "var(--card)",
                         border:
                           "1px solid var(--border)",
-                        borderRadius:
-                          "4px",
+                        borderRadius: "4px",
                         boxShadow:
                           "0 8px 30px rgba(0,0,0,0.06)",
-                        color:
-                          "var(--text)",
+                        color: "var(--text)",
                       }}
                     />
 
@@ -713,11 +728,13 @@ export default function Dashboard() {
                     />
 
                   </BarChart>
+
                 </ResponsiveContainer>
 
               </div>
             </section>
           )}
+
         </div>
 
         {/* =================================================
@@ -777,14 +794,16 @@ export default function Dashboard() {
 
                       <div className="flex min-w-0 items-center gap-3">
 
-                        <div className="
-                          flex h-9 w-9 shrink-0
-                          items-center justify-center
-                          border border-border
-                          bg-bg
-                          text-xs font-semibold
-                          text-text
-                        ">
+                        <div
+                          className="
+                            flex h-9 w-9 shrink-0
+                            items-center justify-center
+                            border border-border
+                            bg-bg
+                            text-xs font-semibold
+                            text-text
+                          "
+                        >
                           {(
                             order.user?.name ||
                             "G"
@@ -799,6 +818,7 @@ export default function Dashboard() {
                           </p>
 
                           <div className="mt-1 flex items-center gap-2">
+
                             <span className="text-[11px] text-muted">
                               #
                               {order.orderCode ||
@@ -816,6 +836,7 @@ export default function Dashboard() {
                                 order.status
                               }
                             />
+
                           </div>
 
                         </div>
@@ -835,7 +856,7 @@ export default function Dashboard() {
           </section>
 
           {/* =================================================
-              LOW STOCK
+              INVENTORY
           ================================================= */}
 
           <section className="border border-border bg-card">
@@ -925,9 +946,7 @@ export default function Dashboard() {
                         <button
                           type="button"
                           onClick={() =>
-                            handleEdit(
-                              item
-                            )
+                            handleEdit(item)
                           }
                           className="
                             flex h-8 w-8
@@ -951,6 +970,7 @@ export default function Dashboard() {
 
             </div>
           </section>
+
         </div>
       </div>
     </main>
